@@ -1,25 +1,29 @@
 package cx.rain.mc.nbtedit.utility;
 
-import com.mojang.authlib.GameProfile;
 import cx.rain.mc.nbtedit.config.NBTEditConfigs;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class PermissionHelper {
     public static boolean checkPermission(CommandSourceStack source) {
-        if (source.getEntity() instanceof ServerPlayer player) {
+        if (source.getEntity() instanceof Player player) {
             return checkPermission(player);
         }
         return false;
     }
 
-    public static boolean checkPermission(ServerPlayer player) {
-        if (NBTEditConfigs.OP_ONLY.get()) {
-            var entry = player.getServer().getPlayerList().getOps()
-                    .get(new GameProfile(player.getUUID(), player.getName().getContents()));
-            return entry != null;
+    public static boolean checkPermission(Player player) {
+        if (player.getServer().isSingleplayer()) {
+            return true;
         } else {
-            return player.isCreative();
+            if (NBTEditConfigs.OP_ONLY.get()) {
+                var entry = player.getServer().getPlayerList().getOps()
+                        .get(player.getGameProfile());
+                return entry != null;
+            } else {
+                return player.isCreative();
+            }
         }
     }
 }

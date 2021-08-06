@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fmllegacy.network.NetworkEvent;
-import org.apache.logging.log4j.Level;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -41,7 +40,7 @@ public class C2SEntityRequestPacket {
 			ServerPlayer player = context.get().getSender();
 			NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
 					" requested entity with UUID " + uuid + ".");
-			NBTEditNetworking.getInstance().sendEntityToClient(player, uuid, isMe);
+			NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid, isMe);
 		});
 		context.get().setPacketHandled(true);
 	}

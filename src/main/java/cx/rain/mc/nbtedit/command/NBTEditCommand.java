@@ -17,12 +17,10 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fmllegacy.network.NetworkDirection;
 
 import java.util.UUID;
 
-@Mod.EventBusSubscriber(modid = NBTEdit.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class NBTEditCommand {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
@@ -43,7 +41,7 @@ public class NBTEditCommand {
                                 .executes(NBTEditCommand::onNBTEditMe))
         );
 
-        NBTEdit.getInstance().getLog().info("Registered command /nbtedit .");
+        NBTEdit.getInstance().getLog().info("Registered command /nbtedit.");
     }
 
     public static int onNBTEdit(final CommandContext<CommandSourceStack> context) {
@@ -72,7 +70,7 @@ public class NBTEditCommand {
 
         var player = (ServerPlayer) context.getSource().getEntity();
         var uuid = context.getArgument("entity_id", UUID.class);
-        NBTEditNetworking.getInstance().sendEntityToClient(player, uuid, false);
+        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid, false);
 
         NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
                 " issued command /nbtedit " + uuid + ".");
@@ -89,7 +87,7 @@ public class NBTEditCommand {
         assert context.getSource().getEntity() instanceof ServerPlayer;
 
         var player = (ServerPlayer) context.getSource().getEntity();
-        NBTEditNetworking.getInstance().sendEntityToClient(player, player.getUUID(), true);
+        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, player.getUUID(), true);
 
         NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
                 " issued command /nbtedit with themselves.");
@@ -106,7 +104,7 @@ public class NBTEditCommand {
 
         var player = (ServerPlayer) context.getSource().getEntity();
         var pos = context.getArgument("block_pos", BlockPos.class);
-        NBTEditNetworking.getInstance().sendTileNBTToClient(player, pos);
+        NBTEditNetworking.getInstance().openTileEditGUIResponse(player, pos);
 
         NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
                 " issued command /nbtedit " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + ".");

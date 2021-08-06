@@ -1,28 +1,26 @@
 package cx.rain.mc.nbtedit.utility.nbt;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+
 import java.util.Comparator;
 
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-
-public class NBTNodeSorter implements Comparator<Node<NamedNBT>> {
-
+public class NBTNodeSorter implements Comparator<NBTNode<NamedNBT>> {
 	@Override
-	public int compare(Node<NamedNBT> a, Node<NamedNBT> b) {
-		NBTBase n1 = a.getObject().getTag(), n2 = b.getObject().getTag();
-		String s1 = a.getObject().getName(), s2 = b.getObject().getName();
-		if (n1 instanceof NBTTagCompound || n1 instanceof NBTTagList) {
-			if (n2 instanceof NBTTagCompound || n2 instanceof NBTTagList) {
+	public int compare(NBTNode<NamedNBT> a, NBTNode<NamedNBT> b) {
+		Tag n1 = a.get().getTag(), n2 = b.get().getTag();
+		String s1 = a.get().getName(), s2 = b.get().getName();
+		if (n1 instanceof CompoundTag || n1 instanceof ListTag) {
+			if (n2 instanceof CompoundTag || n2 instanceof ListTag) {
 				int dif = n1.getId() - n2.getId();
 				return (dif == 0) ? s1.compareTo(s2) : dif;
 			}
 			return 1;
 		}
-		if (n2 instanceof NBTTagCompound || n2 instanceof NBTTagList)
+		if (n2 instanceof CompoundTag || n2 instanceof ListTag)
 			return -1;
 		int dif = n1.getId() - n2.getId();
 		return (dif == 0) ? s1.compareTo(s2) : dif;
 	}
-
 }

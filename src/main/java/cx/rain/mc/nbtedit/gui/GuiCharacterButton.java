@@ -27,7 +27,9 @@ public class GuiCharacterButton extends Gui {
 
 		if (enabled) {
 			GlStateManager._clearColor(1.0F, 1.0F, 1.0F, 1.0F);
-		} else GlStateManager._clearColor(0.5F, 0.5F, 0.5F, 1.0F);
+		} else {
+			GlStateManager._clearColor(0.5F, 0.5F, 0.5F, 1.0F);
+		}
 
 		blit(stack, x, y, id * WIDTH, 27, WIDTH, HEIGHT);
 	}
@@ -36,7 +38,7 @@ public class GuiCharacterButton extends Gui {
 		enabled = aFlag;
 	}
 
-	public boolean inBounds(int mx, int my) {
+	public boolean inBounds(double mx, double my) {
 		return enabled && mx >= x && my >= y && mx < x + WIDTH && my < y + HEIGHT;
 	}
 

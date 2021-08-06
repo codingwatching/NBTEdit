@@ -1,10 +1,12 @@
 package cx.rain.mc.nbtedit;
 
+import cx.rain.mc.nbtedit.command.NBTEditCommand;
 import cx.rain.mc.nbtedit.config.NBTEditConfigs;
 import cx.rain.mc.nbtedit.utility.nbt.NBTNodeSorter;
 import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
 import cx.rain.mc.nbtedit.utility.nbt.ClipboardStates;
 import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -15,6 +17,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
+import org.apache.logging.log4j.core.appender.rolling.OnStartupTriggeringPolicy;
+import org.apache.logging.log4j.core.appender.rolling.TriggeringPolicy;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.File;
@@ -27,14 +31,13 @@ public class NBTEdit {
 
 	public static final NBTNodeSorter SORTER = new NBTNodeSorter();
 
-	public static NamedNBT clipboard = null;
+	public static NamedNBT CLIPBOARD = null;
 
 	private static NBTEdit INSTANCE;
 
-	private Logger log = LogManager.getLogger("NBTEdit");
-
-	private org.apache.logging.log4j.core.Logger internalLog =
-			(org.apache.logging.log4j.core.Logger) LogManager.getLogger("NBTEdit");
+	private final Logger log = LogManager.getLogger("NBTEdit");
+	private final org.apache.logging.log4j.core.Logger internalLog =
+			(org.apache.logging.log4j.core.Logger) LogManager.getLogger("NBTEditInternal");
 
 	private ClipboardStates clipboardSaves;
 
@@ -48,6 +51,8 @@ public class NBTEdit {
 		final var bus = FMLJavaModLoadingContext.get().getModEventBus();
 		bus.addListener(this::setup);
 		bus.addListener(this::setupClient);
+
+		MinecraftForge.EVENT_BUS.addListener(NBTEditCommand::onRegisterCommands);
 	}
 
 	public static NBTEdit getInstance() {
@@ -75,8 +80,9 @@ public class NBTEdit {
 				.withFileName("logs/NBTEdit/latest.log")
 				.withName("NBTEditRollingFileAppender")
 				.withLayout(layout)
-				.withIgnoreExceptions(false);
-		RollingFileAppender appender = appenderBuilder.build();
+				.withIgnoreExceptions(false)
+				.withPolicy(OnStartupTriggeringPolicy.createPolicy(0));
+		var appender = appenderBuilder.build();
 		appender.start();
 
 		internalLog.addAppender(appender);

@@ -107,17 +107,17 @@ public class NBTEditNetworking {
 	 * @param player The player to send the TileEntity to.
 	 * @param pos    The block containing the TileEntity.
 	 */
-	public void sendTileNBTToClient(final ServerPlayer player, final BlockPos pos) {
+	public void openTileEditGUIResponse(final ServerPlayer player, final BlockPos pos) {
 		if (PermissionHelper.checkPermission(player)) {
 			player.getServer().addTickable(() -> {
 				BlockEntity tile = player.getCommandSenderWorld().getBlockEntity(pos);
 				if (tile != null) {
 					CompoundTag tag = new CompoundTag();
 					tile.save(tag);
-					CHANNEL.sendTo(new C2STileNBTSavePacket(pos, tag),
+					CHANNEL.sendTo(new S2COpenTileEditGUIPacket(pos, tag),
 							player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 				} else {
-					PlayerMessageHelper.sendMessage(player, ChatFormatting.RED,
+					PlayerMessageHelper.sendMessageToCurrent(ChatFormatting.RED,
 							TranslateKeys.MESSAGE_NO_TARGET_TILE, pos.getX(), pos.getY(), pos.getZ());
 					// Todo: AS: Add below to I18n.
 					// "Error! There is no TileEntity at " + pos.getX() + " " +	pos.getY() + " " + pos.getZ() + "."
@@ -132,30 +132,30 @@ public class NBTEditNetworking {
 	 * @param player   The player to send the Entity data to.
 	 * @param uuid The UUID of the Entity.
 	 */
-	public void sendEntityToClient(final ServerPlayer player, final UUID uuid, boolean isMe) {
+	public void openEntityEditGUIResponse(final ServerPlayer player, final UUID uuid, boolean isMe) {
 		if (PermissionHelper.checkPermission(player)) {
 			player.getServer().addTickable(() -> {
 				Entity entity;
 				if (isMe) {
 					entity = player;
+				} else {
+					entity = EntityHelper.getEntityByUuid(player.getServer(), uuid);
 				}
-				entity = EntityHelper.getEntityByUuid(player.getServer(), uuid);
-
 				if (entity instanceof Player && entity != player && !NBTEditConfigs.CAN_EDIT_OTHER_PLAYERS.get()) {
 					PlayerMessageHelper.sendMessage(player, ChatFormatting.RED,
 							TranslateKeys.MESSAGE_CANNOT_EDIT_OTHER_PLAYER);
 					// Todo: AS: I18n below.
 					// "Error - You may not use NBTEdit on other Players"
-					NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
-							" tried to use NBTEdit on another player: " + entity.getName() + " .");
+					NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName().getString() +
+							" tried to use NBTEdit on another player: " + entity.getName().getString() + " .");
 					return;
 				}
 
 				if (entity != null) {
 					CompoundTag tag = new CompoundTag();
 					entity.save(tag);
-					CHANNEL.sendTo(new C2SEntityNBTSavePacket(uuid, tag),
-							player.connection.getConnection(), NetworkDirection.PLAY_TO_SERVER);
+					CHANNEL.sendTo(new S2COpenEntityEditGUIPacket(uuid, tag, isMe),
+							player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 				} else {
 					PlayerMessageHelper.sendMessage(player, ChatFormatting.RED,
 							TranslateKeys.MESSAGE_UNKNOWN_ENTITY_ID);

@@ -34,7 +34,7 @@ public class C2STileRequestPacket {
 			NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() + " requested TileEntity at " +
 					pos.getX() + " " + pos.getY() + " " + pos.getZ() + ".");
 
-			NBTEditNetworking.getInstance().sendTileNBTToClient(player, pos);
+			NBTEditNetworking.getInstance().openTileEditGUIResponse(player, pos);
 		});
 		context.get().setPacketHandled(true);
 	}

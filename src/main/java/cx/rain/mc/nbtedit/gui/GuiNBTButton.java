@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.utility.NBTHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import org.lwjgl.opengl.GL11;
 
 public class GuiNBTButton extends Gui {
 	public static final int WIDTH = 9;
@@ -37,7 +36,7 @@ public class GuiNBTButton extends Gui {
 		} else
 			hoverTime = -1;
 
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+//		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		if (enabled)
 			blit(stack, x, y, (id - 1) * 9, 18, WIDTH, HEIGHT);//Draw the texture
 

@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.utility.NBTHelper;
 import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
-import cx.rain.mc.nbtedit.utility.nbt.Node;
+import cx.rain.mc.nbtedit.utility.nbt.NBTNode;
 import cx.rain.mc.nbtedit.utility.nbt.ParseHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -24,7 +24,7 @@ public class GuiEditNBT extends Gui {
 	public static final int WIDTH = 178, HEIGHT = 93;
 
 	private Minecraft mc = Minecraft.getInstance();
-	private Node<NamedNBT> node;
+	private NBTNode<NamedNBT> NBTNode;
 	private Tag nbt;
 	private boolean canEditText, canEditValue;
 	private GuiNBTTree parent;
@@ -39,12 +39,12 @@ public class GuiEditNBT extends Gui {
 	private GuiCharacterButton newLine, section;
 
 
-	public GuiEditNBT(GuiNBTTree parent, Node<NamedNBT> node, boolean editText, boolean editValue) {
+	public GuiEditNBT(GuiNBTTree parent, NBTNode<NamedNBT> NBTNode, boolean editText, boolean editValue) {
 		super(Minecraft.getInstance());
 
 		this.parent = parent;
-		this.node = node;
-		this.nbt = node.getObject().getTag();
+		this.NBTNode = NBTNode;
+		this.nbt = NBTNode.get().getTag();
 		canEditText = editText;
 		canEditValue = editValue;
 	}
@@ -55,7 +55,7 @@ public class GuiEditNBT extends Gui {
 
 		section = new GuiCharacterButton((byte) 0, x + WIDTH - 1, y + 34);
 		newLine = new GuiCharacterButton((byte) 1, x + WIDTH - 1, y + 50);
-		String sKey = (key == null) ? node.getObject().getName() : key.getText();
+		String sKey = (key == null) ? NBTNode.get().getName() : key.getText();
 		String sValue = (value == null) ? getValue(nbt) : value.getText();
 		this.key = new GuiTextField(mc.font, x + 46, y + 18, 116, 15, false);
 		this.value = new GuiTextField(mc.font, x + 46, y + 44, 116, 15, true);
@@ -112,10 +112,10 @@ public class GuiEditNBT extends Gui {
 
 	private void saveAndQuit() {
 		if (canEditText) {
-			node.getObject().setName(key.getText());
+			NBTNode.get().setName(key.getText());
 		}
-		setValidValue(node, value.getText());
-		parent.nodeEdited(node);
+		setValidValue(NBTNode, value.getText());
+		parent.nodeEdited(NBTNode);
 		parent.closeWindow();
 	}
 
@@ -145,8 +145,8 @@ public class GuiEditNBT extends Gui {
 			drawCenteredString(mc.font, stack, vError, x + WIDTH / 2, y + 32, 0xFF0000);
 		}
 
-		newLine.draw(xIn, yIn);
-		section.draw(xIn, yIn);
+		newLine.draw(stack, xIn, yIn);
+		section.draw(stack, xIn, yIn);
 	}
 
 	public void drawCenteredString(Font par1FontRenderer, PoseStack stack, String par2Str, int par3, int par4, int par5) {
@@ -201,16 +201,16 @@ public class GuiEditNBT extends Gui {
 	}
 
 	private boolean validName() {
-		for (Node<NamedNBT> node : this.node.getParent().getChildren()) {
-			Tag base = node.getObject().getTag();
-			if (base != nbt && node.getObject().getName().equals(key.getText()))
+		for (NBTNode<NamedNBT> NBTNode : this.NBTNode.getParent().getChildren()) {
+			Tag base = NBTNode.get().getTag();
+			if (base != nbt && NBTNode.get().getName().equals(key.getText()))
 				return false;
 		}
 		return true;
 	}
 
-	private static void setValidValue(Node<NamedNBT> node, String value) {
-		NamedNBT named = node.getObject();
+	private static void setValidValue(NBTNode<NamedNBT> NBTNode, String value) {
+		NamedNBT named = NBTNode.get();
 		Tag base = named.getTag();
 
 		if (base instanceof ByteTag) {

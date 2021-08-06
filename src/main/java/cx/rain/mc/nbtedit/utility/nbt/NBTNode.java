@@ -3,59 +3,59 @@ package cx.rain.mc.nbtedit.utility.nbt;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node<T> {
+public class NBTNode<T> {
 
-	private List<Node<T>> children;
+	private List<NBTNode<T>> children;
 
-	private Node<T> parent;
+	private NBTNode<T> parent;
 	private T obj;
 
-	private boolean drawChildren;
+	private boolean showChildren;
 
-	public Node() {
+	public NBTNode() {
 		this((T) null);
 	}
 
-	public Node(T obj) {
+	public NBTNode(T obj) {
 		children = new ArrayList<>();
 		this.obj = obj;
 	}
 
-	public boolean shouldDrawChildren() {
-		return drawChildren;
+	public boolean shouldShowChildren() {
+		return showChildren;
 	}
 
-	public void setDrawChildren(boolean draw) {
-		drawChildren = draw;
+	public void setShowChildren(boolean draw) {
+		showChildren = draw;
 	}
 
-	public Node(Node<T> parent) {
+	public NBTNode(NBTNode<T> parent) {
 		this(parent, null);
 	}
 
-	public Node(Node<T> parent, T obj) {
+	public NBTNode(NBTNode<T> parent, T obj) {
 		this.parent = parent;
 		children = new ArrayList<>();
 		this.obj = obj;
 	}
 
-	public void addChild(Node<T> n) {
+	public void addChild(NBTNode<T> n) {
 		children.add(n);
 	}
 
-	public boolean removeChild(Node<T> n) {
+	public boolean removeChild(NBTNode<T> n) {
 		return children.remove(n);
 	}
 
-	public List<Node<T>> getChildren() {
+	public List<NBTNode<T>> getChildren() {
 		return children;
 	}
 
-	public Node<T> getParent() {
+	public NBTNode<T> getParent() {
 		return parent;
 	}
 
-	public T getObject() {
+	public T get() {
 		return obj;
 	}
 

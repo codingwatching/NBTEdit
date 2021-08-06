@@ -348,7 +348,7 @@ public class GuiTextField extends Gui {
 	/**
 	 * Args: x, y, buttonClicked
 	 */
-	public void mouseClicked(int par1, int par2, int par3) {
+	public void mouseClicked(double par1, double par2, int par3) {
 		// Todo: AS: Check it. If it crashed, change "\u00A7" to another character.
 		String displayString = text.replace(NBTHelper.SECTION_SIGN, '\u00A7');
 		boolean var4 = par1 >= xPos && par1 < xPos + width && par2 >= yPos && par2 < yPos + height;
@@ -356,7 +356,7 @@ public class GuiTextField extends Gui {
 		setFocused(isEnabled && var4);
 
 		if (isFocused && par3 == 0) {
-			int var5 = par1 - xPos;
+			int var5 = (int) par1 - xPos;
 
 			if (enableBackgroundDrawing) {
 				var5 -= 4;

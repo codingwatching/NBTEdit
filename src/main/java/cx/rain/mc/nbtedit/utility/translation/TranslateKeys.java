@@ -22,7 +22,7 @@ public enum TranslateKeys {
     
     BUTTON_SAVE("button.save"),
     BUTTON_QUIT("button.quit"),
-
+    BUTTON_LOAD("button.load"),
     ;
 
     private String key;

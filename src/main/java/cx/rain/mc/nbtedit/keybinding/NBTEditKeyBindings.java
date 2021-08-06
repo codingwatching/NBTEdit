@@ -19,7 +19,7 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = NBTEdit.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 @OnlyIn(Dist.CLIENT)
-public class NBTEditKeyBinding {
+public class NBTEditKeyBindings {
     public static final KeyMapping NBTEDIT_SHORTCUT = new KeyMapping(TranslateKeys.KEY_NBTEDIT_SHORTCUT.getKey(),
             KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N,
             TranslateKeys.KEY_CATEGORY.getKey());
@@ -29,14 +29,5 @@ public class NBTEditKeyBinding {
         event.enqueueWork(() -> ClientRegistry.registerKeyBinding(NBTEDIT_SHORTCUT));
 
         NBTEdit.getInstance().getLog().info("Registered key binding.");
-    }
-
-    @SubscribeEvent
-    public static void onKeyboardInput(InputEvent.KeyInputEvent event) {
-        if (NBTEDIT_SHORTCUT.consumeClick()) {
-            // Todo: AS: Open NBTEdit GUI.
-            Minecraft.getInstance().player.sendMessage(new TextComponent("Todo: Open NBTEdit."),
-                    Minecraft.getInstance().player.getUUID());
-        }
     }
 }

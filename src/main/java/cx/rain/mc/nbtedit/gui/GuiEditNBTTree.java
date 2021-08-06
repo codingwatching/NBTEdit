@@ -15,22 +15,24 @@ import net.minecraft.nbt.CompoundTag;
 
 import net.minecraft.network.chat.TranslatableComponent;
 
-import java.io.IOException;
 import java.util.UUID;
 
 public class GuiEditNBTTree extends Screen {
-	private UUID uuid;
-	private BlockPos pos;
+	protected UUID uuid;
+	protected BlockPos pos;
 
-	private boolean isEntity;
+	protected boolean isMe;
+
+	protected boolean isEntity;
 
 	protected String screenTitle;
-	private GuiNBTTree guiNbtTree;
+	protected GuiNBTTree guiNbtTree;
 
-	public GuiEditNBTTree(UUID uuidIn, CompoundTag tag) {
+	public GuiEditNBTTree(UUID uuidIn, CompoundTag tag, boolean isMeIn) {
 		super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI.getKey(), uuidIn));
 		isEntity = true;
 		uuid = uuidIn;
+		isMe = isMeIn;
 
 		guiNbtTree = new GuiNBTTree(new NBTTree(tag));
 	}
@@ -119,13 +121,17 @@ public class GuiEditNBTTree extends Screen {
 //		}
 //
 //	}
-//
-//	public void updateScreen() {
-//		if (!mc.player.isEntityAlive())
-//			quitWithoutSaving();
-//		else
-//			guiNbtTree.updateScreen();
-//	}
+
+	@Override
+	public void tick() {
+		super.tick();
+
+		if (!getMinecraft().player.isAlive()) {
+			quit(false);
+		}
+
+		guiNbtTree.updateScreen();
+	}
 
 	protected void onSaveButtonClicked(Button button) {
 		quit(true);
@@ -139,7 +145,7 @@ public class GuiEditNBTTree extends Screen {
 		if (saving) {
 			if (isEntity) {
 				NBTEditNetworking.getInstance().getChannel().sendToServer(
-						new C2SEntityNBTSavePacket(uuid, guiNbtTree.getNBTTree().toCompound()));
+						new C2SEntityNBTSavePacket(uuid, guiNbtTree.getNBTTree().toCompound(), isMe));
 			} else {
 				NBTEditNetworking.getInstance().getChannel().sendToServer(
 						new C2STileNBTSavePacket(pos, guiNbtTree.getNBTTree().toCompound()));
@@ -153,16 +159,14 @@ public class GuiEditNBTTree extends Screen {
 
 	@Override
 	public void render(PoseStack stack, int x, int y, float partialTick) {
-		super.render(stack, x, y, partialTick);
-
 		renderBackground(stack);
 		guiNbtTree.draw(stack, x, y);
 		drawCenteredString(stack, font, getTitle(), width / 2, 5, 19777215);
 
 		if (guiNbtTree.getWindow() == null) {
-			render(stack, x, y, partialTick);
+			super.render(stack, x, y, partialTick);
 		} else {
-			render(stack, -1, -1, partialTick);
+			super.render(stack, -1, -1, partialTick);
 		}
 	}
 

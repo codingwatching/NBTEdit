@@ -9,7 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 
 import net.minecraft.util.Mth;
-import org.lwjgl.opengl.GL11;
 
 public class GuiSaveSlotButton extends Gui {
 	public static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/widgets.png");
@@ -61,7 +60,7 @@ public class GuiSaveSlotButton extends Gui {
 	}
 
 	private void renderVanillaButton(PoseStack stack, int x, int y, int u, int v, int width, int height) {
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+//		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		mc.textureManager.bindForSetup(TEXTURE);
 
 		//Top Left

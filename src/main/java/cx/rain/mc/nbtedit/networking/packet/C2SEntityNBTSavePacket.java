@@ -31,21 +31,26 @@ public class C2SEntityNBTSavePacket {
 	 */
 	protected CompoundTag tag;
 
+	protected boolean isMe;
+
 	public C2SEntityNBTSavePacket(ByteBuf buf) {
 		var packetBuf = new FriendlyByteBuf(buf);
 		uuid = packetBuf.readUUID();
 		tag = packetBuf.readNbt();
+		isMe = packetBuf.readBoolean();
 	}
 
-	public C2SEntityNBTSavePacket(UUID uuidIn, CompoundTag tagIn) {
+	public C2SEntityNBTSavePacket(UUID uuidIn, CompoundTag tagIn, boolean isMeIn) {
 		uuid = uuidIn;
 		tag = tagIn;
+		isMe = isMeIn;
 	}
 
 	public void toBytes(ByteBuf buf) {
 		var packetBuf = new FriendlyByteBuf(buf);
 		packetBuf.writeUUID(uuid);
-		packetBuf.writeNbt(this.tag);
+		packetBuf.writeNbt(tag);
+		packetBuf.writeBoolean(isMe);
 	}
 
 	public void handler(Supplier<NetworkEvent.Context> context) {

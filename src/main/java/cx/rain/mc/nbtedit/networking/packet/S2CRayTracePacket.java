@@ -1,6 +1,8 @@
 package cx.rain.mc.nbtedit.networking.packet;
 
+import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
 import cx.rain.mc.nbtedit.utility.PlayerMessageHelper;
+import cx.rain.mc.nbtedit.utility.RayTraceHelper;
 import cx.rain.mc.nbtedit.utility.translation.TranslateKeys;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
@@ -23,20 +25,7 @@ public class S2CRayTracePacket {
 	}
 
 	public void handler(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			HitResult result = Minecraft.getInstance().hitResult;
-			if (result != null) {
-				if (result.getType() == HitResult.Type.ENTITY) {
-					new C2SEntityRequestPacket(((EntityHitResult) result).getEntity().getUUID(), false);
-				} else if (result.getType() == HitResult.Type.BLOCK) {
-					new C2STileRequestPacket(((BlockHitResult) result).getBlockPos());
-				} else {
-					PlayerMessageHelper.sendMessageToCurrent(ChatFormatting.RED, TranslateKeys.MESSAGE_NO_ANY_TARGET);
-					// Todo: AS: I18n below.
-					// "Error - No tile or entity selected"
-				}
-			}
-		});
+		context.get().enqueueWork(RayTraceHelper::RayTraceBlockOrEntity);
 		context.get().setPacketHandled(true);
 	}
 }
