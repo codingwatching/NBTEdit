@@ -1,7 +1,7 @@
 package cx.rain.mc.nbtedit.networking.packet;
 
 import cx.rain.mc.nbtedit.NBTEdit;
-import cx.rain.mc.nbtedit.gui.GuiEditNBTTree;
+import cx.rain.mc.nbtedit.gui.screen.NBTEditScreen;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -41,7 +41,7 @@ public class S2COpenEntityEditGUIPacket {
             NBTEdit.getInstance().getInternalLogger().info("Player " + Minecraft.getInstance().player.getName().getString() +
                     " requested to edit an Entity with UUID " + uuid + " .");
 
-            Minecraft.getInstance().setScreen(new GuiEditNBTTree(uuid, tag, isMe));
+            Minecraft.getInstance().setScreen(new NBTEditScreen(uuid, tag, isMe));
         });
         context.get().setPacketHandled(true);
     }

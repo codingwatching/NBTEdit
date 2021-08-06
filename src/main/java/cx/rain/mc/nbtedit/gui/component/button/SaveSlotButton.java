@@ -57,6 +57,9 @@ public class SaveSlotButton extends Button {
         return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
     }
 
+    public ClipboardStates.Clipboard getSave() {
+        return save;
+    }
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTick) {
@@ -110,7 +113,7 @@ public class SaveSlotButton extends Button {
             save.name += character;
             text = (save.tag.isEmpty()
                     ? TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_SAVE.getKey())
-                    : TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_LOAD.getKey())) + save.name
+                    : TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_LOAD.getKey())) + save.name;
             updatePosition();
         }
 

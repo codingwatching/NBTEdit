@@ -1,6 +1,5 @@
-package cx.rain.mc.nbtedit.gui;
+package cx.rain.mc.nbtedit.utility;
 
-import cx.rain.mc.nbtedit.utility.NBTHelper;
 import net.minecraft.SharedConstants;
 
 public class CharacterFilter {

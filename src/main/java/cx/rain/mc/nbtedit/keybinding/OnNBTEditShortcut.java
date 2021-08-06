@@ -24,7 +24,7 @@ import net.minecraftforge.fml.common.Mod;
 public class OnNBTEditShortcut {
     @SubscribeEvent
     public static void onKeyboardInput(InputEvent.KeyInputEvent event) {
-        if (NBTEditKeyBindings.NBTEDIT_SHORTCUT.consumeClick()) {
+        if (NBTEditKeyBindings.NBTEDIT_SHORTCUT.isDown()) {
             RayTraceHelper.RayTraceBlockOrEntity();
         }
     }

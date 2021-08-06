@@ -45,6 +45,24 @@ public class NBTHelper {
 		};
 	}
 
+	public static Tag of(byte type, int value) {
+		return switch (type) {
+			case 0 -> EndTag.INSTANCE;
+			case 1 -> ByteTag.valueOf((byte) value);
+			case 2 -> ShortTag.valueOf((short) value);
+			case 3 -> IntTag.valueOf(value);
+			case 4 -> LongTag.valueOf(value);
+			case 5 -> FloatTag.valueOf(value);
+			case 6 -> DoubleTag.valueOf(value);
+			case 7 -> new ByteArrayTag(new byte[0]);
+			case 8 -> StringTag.valueOf("");
+			case 9 -> new ListTag();
+			case 10 -> new CompoundTag();
+			case 11 -> new IntArrayTag(new int[0]);
+			default -> null;
+		};
+	}
+
 	public static String getButtonName(byte id) {
 		return switch (id) {
 			case 1 -> "Byte";

@@ -2,7 +2,7 @@ package cx.rain.mc.nbtedit.gui.component;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
-import cx.rain.mc.nbtedit.gui.GuiNBTEdit;
+import cx.rain.mc.nbtedit.gui.NBTEditGui;
 import cx.rain.mc.nbtedit.utility.NBTHelper;
 import cx.rain.mc.nbtedit.utility.nbt.NBTNode;
 import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
@@ -20,11 +20,11 @@ public class NBTNodeComponent extends AbstractWidget {
 
     protected String text;
     protected NBTNode<NamedNBT> node;
-    protected GuiNBTEdit gui;
+    protected NBTEditGui gui;
 
     private final Minecraft minecraft = Minecraft.getInstance();
 
-    public NBTNodeComponent(int x, int y, Component textIn, GuiNBTEdit guiIn, NBTNode<NamedNBT> nodeIn) {
+    public NBTNodeComponent(int x, int y, Component textIn, NBTEditGui guiIn, NBTNode<NamedNBT> nodeIn) {
         super(x, y, 0, Minecraft.getInstance().font.lineHeight, textIn);
 
         text = textIn.getString();
@@ -64,6 +64,14 @@ public class NBTNodeComponent extends AbstractWidget {
 
     public boolean isSpoilerClicked(int mouseX, int mouseY) {
         return isMouseInsideSpoiler(mouseX, mouseY);
+    }
+
+    public boolean spoilerClicked(int mouseX, int mouseY) {
+        if (node.hasChildren() && isMouseInsideSpoiler(mouseX, mouseY)) {
+            node.setShowChildren(!node.shouldShowChildren());
+            return true;
+        }
+        return false;
     }
 
     public void shiftY(int offsetY) {

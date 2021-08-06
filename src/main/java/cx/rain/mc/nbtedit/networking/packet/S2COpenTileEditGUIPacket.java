@@ -1,7 +1,7 @@
 package cx.rain.mc.nbtedit.networking.packet;
 
 import cx.rain.mc.nbtedit.NBTEdit;
-import cx.rain.mc.nbtedit.gui.GuiEditNBTTree;
+import cx.rain.mc.nbtedit.gui.screen.NBTEditScreen;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -39,7 +39,7 @@ public class S2COpenTileEditGUIPacket {
                     " requested to edit a TileEntity at " +
                     pos.getX() + " " + pos.getY() + " " + pos.getZ() + ".");
 
-            Minecraft.getInstance().setScreen(new GuiEditNBTTree(pos, tag));
+            Minecraft.getInstance().setScreen(new NBTEditScreen(pos, tag));
         });
         context.get().setPacketHandled(true);
     }

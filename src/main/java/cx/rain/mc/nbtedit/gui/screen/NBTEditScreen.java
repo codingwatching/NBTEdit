@@ -1,5 +1,7 @@
 package cx.rain.mc.nbtedit.gui.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import cx.rain.mc.nbtedit.gui.NBTEditGui;
 import cx.rain.mc.nbtedit.utility.EntityHelper;
 import cx.rain.mc.nbtedit.utility.nbt.NBTTree;
 import cx.rain.mc.nbtedit.utility.translation.TranslateKeys;
@@ -7,13 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.Entity;
 
 import java.util.UUID;
 
-public class ScreenNBTEdit extends Screen {
+public class NBTEditScreen extends Screen {
     protected final boolean isEntity;
 
     protected UUID uuid;
@@ -22,7 +23,9 @@ public class ScreenNBTEdit extends Screen {
 
     protected BlockPos pos;
 
-    public ScreenNBTEdit(UUID uuidIn, CompoundTag tag, boolean isMeIn) {
+    protected NBTEditGui gui;
+
+    public NBTEditScreen(UUID uuidIn, CompoundTag tag, boolean isMeIn) {
         super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI.getKey(), uuidIn));
         minecraft = Minecraft.getInstance();
 
@@ -30,9 +33,10 @@ public class ScreenNBTEdit extends Screen {
         uuid = uuidIn;
         isMe = isMeIn;
 
+        gui = new NBTEditGui(new NBTTree(tag));
     }
 
-    public ScreenNBTEdit(BlockPos posIn, CompoundTag tag) {
+    public NBTEditScreen(BlockPos posIn, CompoundTag tag) {
         super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_TILE_GUI.getKey(),
                 posIn.getX(), posIn.getY(), posIn.getZ()));
         minecraft = Minecraft.getInstance();
@@ -40,7 +44,7 @@ public class ScreenNBTEdit extends Screen {
         isEntity = false;
         pos	= posIn;
 
-
+        gui = new NBTEditGui(new NBTTree(tag));
     }
 
     public boolean isEntity() {
@@ -70,7 +74,17 @@ public class ScreenNBTEdit extends Screen {
         getMinecraft().keyboardHandler.setSendRepeatsToGui(true);
         renderables.clear();
 
+        gui.init(width, height, height - 35);
+    }
 
+    @Override
+    public boolean mouseClicked(double par1, double par2, int par3) {
+        gui.mouseClicked(par1, par2, par3);
+        return true;
+    }
 
+    @Override
+    public void render(PoseStack stack, int mouseX, int mouseY, float partialTick) {
+        gui.render(stack, mouseX, mouseY, partialTick);
     }
 }
