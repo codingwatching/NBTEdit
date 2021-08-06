@@ -1,155 +1,198 @@
 package cx.rain.mc.nbtedit.gui;
 
-import cx.rain.mc.nbtedit.nbt.NBTTree;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
+import cx.rain.mc.nbtedit.utility.nbt.NBTTree;
+import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
 import cx.rain.mc.nbtedit.networking.packet.C2SEntityNBTSavePacket;
 import cx.rain.mc.nbtedit.networking.packet.C2STileNBTSavePacket;
-import net.minecraft.client.KeyboardHandler;
+import cx.rain.mc.nbtedit.utility.translation.TranslateKeys;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
-import cx.rain.mc.nbtedit.NBTEdit;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class GuiEditNBTTree extends Screen {
-	public final int entityOrX, y, z;
-	private boolean entity;
+	private UUID uuid;
+	private BlockPos pos;
+
+	private boolean isEntity;
+
 	protected String screenTitle;
-	private GuiNBTTree guiTree;
+	private GuiNBTTree guiNbtTree;
 
-	public GuiEditNBTTree(int entity, CompoundTag tag) {
-		super();
-		this.entity = true;
-		entityOrX = entity;
-		y = 0;
-		z = 0;
-		screenTitle = "NBTEdit -- EntityId #" + entityOrX;
-		guiTree = new GuiNBTTree(new NBTTree(tag));
+	public GuiEditNBTTree(UUID uuidIn, CompoundTag tag) {
+		super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI.getKey(), uuidIn));
+		isEntity = true;
+		uuid = uuidIn;
+
+		guiNbtTree = new GuiNBTTree(new NBTTree(tag));
 	}
 
-	public GuiEditNBTTree(BlockPos pos, CompoundTag tag) {
-		this.entity = false;
-		entityOrX = pos.getX();
-		this.y = pos.getY();
-		this.z = pos.getZ();
-		screenTitle = "NBTEdit -- TileEntity at " + pos.getX() + "," + pos.getY() + "," + pos.getZ();
-		guiTree = new GuiNBTTree(new NBTTree(tag));
+	public GuiEditNBTTree(BlockPos posIn, CompoundTag tag) {
+		super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_TILE_GUI.getKey(),
+				posIn.getX(), posIn.getY(), posIn.getZ()));
+		isEntity = false;
+		pos	= posIn;
+
+		guiNbtTree = new GuiNBTTree(new NBTTree(tag));
 	}
 
-	@SuppressWarnings("unchecked")
-	public void initGui() {
-		minecraft.keyboardHandler.setSendRepeatsToGui(true);
-		buttonList.clear();
-		guiTree.initGUI(width, height, height - 35);
-		this.buttonList.add(new GuiButton(1, width / 4 - 100, this.height - 27, "Save"));
-		this.buttonList.add(new GuiButton(0, width * 3 / 4 - 100, this.height - 27, "Quit"));
+	@Override
+	protected void init() {
+		super.init();
+
+		setMinecraft(Minecraft.getInstance());
+
+		getMinecraft().keyboardHandler.setSendRepeatsToGui(true);
+		renderables.clear();
+		guiNbtTree.init(width, height, height - 35);
+		renderables.add(new Button(width / 4 - 100, height - 27, width / 2, 27,
+				new TranslatableComponent(TranslateKeys.BUTTON_SAVE.getKey()), this::onSaveButtonClicked));
+		renderables.add(new Button(width * 3 / 4 - 100, height - 27, width / 2, 27,
+				new TranslatableComponent(TranslateKeys.BUTTON_QUIT.getKey()), this::onQuitButtonClicked));
 	}
 
-	public void onGuiClosed() {
-		Keyboard.enableRepeatEvents(false);
+	@Override
+	public void onClose() {
+		super.onClose();
+
+		assert getMinecraft() != null;
+		getMinecraft().keyboardHandler.setSendRepeatsToGui(false);
 	}
 
-	protected void keyTyped(char par1, int key) {
-		GuiEditNBT window = guiTree.getWindow();
-		if (window != null)
-			window.keyTyped(par1, key);
-		else {
-			if (key == 1) {
-				if (guiTree.isEditingSlot())
-					guiTree.stopEditingSlot();
-				else
-					quitWithoutSaving();
-			} else if (key == Keyboard.KEY_DELETE)
-				guiTree.deleteSelected();
-			else if (key == Keyboard.KEY_RETURN)
-				guiTree.editSelected();
-			else if (key == Keyboard.KEY_UP)
-				guiTree.arrowKeyPressed(true);
-			else if (key == Keyboard.KEY_DOWN)
-				guiTree.arrowKeyPressed(false);
-			else
-				guiTree.keyTyped(par1, key);
-		}
-	}
-
-	protected void mouseClicked(int x, int y, int t) throws IOException {
-		if (guiTree.getWindow() == null)
-			super.mouseClicked(x, y, t);
-		if (t == 0)
-			guiTree.mouseClicked(x, y);
-		if (t == 1)
-			guiTree.rightClick(x, y);
-	}
-
-	public void handleMouseInput() throws IOException {
-		super.handleMouseInput();
-		int ofs = Mouse.getEventDWheel();
-
-		if (ofs != 0) {
-			guiTree.shift((ofs >= 1) ? 6 : -6);
-		}
-
-	}
-
-	protected void actionPerformed(GuiButton b) {
-		if (b.enabled) {
-			switch (b.id) {
-				case 1:
-					quitWithSave();
-					break;
-				default:
-					quitWithoutSaving();
-					break;
+	@Override
+	public boolean charTyped(char character, int keyId) {
+		var window = guiNbtTree.getWindow();
+		if (window != null) {
+			window.charTyped(character, keyId);
+		} else {
+			if (keyId == InputConstants.PRESS) {
+				if (guiNbtTree.isEditingSlot()) {
+					guiNbtTree.stopEditingSlot();
+				} else {
+					quit(false);
+				}
+			} else if (keyId == InputConstants.KEY_DELETE) {
+				guiNbtTree.deleteSelected();
+			} else if (keyId == InputConstants.KEY_RETURN) {
+				guiNbtTree.editSelected();
+			} else if (keyId == InputConstants.KEY_UP) {
+				guiNbtTree.arrowKeyPressed(true);
+			} else if (keyId == InputConstants.KEY_DOWN) {
+				guiNbtTree.arrowKeyPressed(false);
+			} else {
+				guiNbtTree.keyTyped(character, keyId);
 			}
 		}
+
+		return super.charTyped(character, keyId);
 	}
 
-	public void updateScreen() {
-		if (!mc.player.isEntityAlive())
-			quitWithoutSaving();
-		else
-			guiTree.updateScreen();
-	}
-
-	private void quitWithSave() {
-		if (entity)
-			NBTEdit.NETWORK.INSTANCE.sendToServer(new C2SEntityNBTSavePacket(entityOrX, guiTree.getNBTTree().toCompoundTag()));
-		else
-			NBTEdit.NETWORK.INSTANCE.sendToServer(new C2STileNBTSavePacket(new BlockPos(entityOrX, y, z), guiTree.getNBTTree().toCompoundTag()));
-		mc.displayGuiScreen(null);
-		mc.setIngameFocus();
-
-	}
-
-	private void quitWithoutSaving() {
-		mc.displayGuiScreen(null);
-	}
-
-	public void drawScreen(int x, int y, float par3) {
-		this.drawDefaultBackground();
-		guiTree.draw(x, y);
-		this.drawCenteredString(mc.fontRenderer, this.screenTitle, this.width / 2, 5, 16777215);
-		if (guiTree.getWindow() == null)
-			super.drawScreen(x, y, par3);
-		else
-			super.drawScreen(-1, -1, par3);
-	}
-
-	public boolean doesGuiPauseGame() {
+	@Override
+	public boolean mouseClicked(double x, double y, int keyId) {
+		if (guiNbtTree.getWindow() == null) {
+			return super.mouseClicked(x, y, keyId);
+		}
+		if (keyId == InputConstants.MOUSE_BUTTON_LEFT) {
+			guiNbtTree.mouseClicked(x, y);
+		}
+		if (keyId == InputConstants.MOUSE_BUTTON_RIGHT) {
+			guiNbtTree.rightClick(x, y);
+		}
 		return true;
 	}
 
-	public Entity getEntity() {
-		return entity ? mc.world.getEntityByID(entityOrX) : null;
+	// FIXME: 2021/8/6 Why these methods not used?
+//	public void handleMouseInput() throws IOException {
+//		super.handleMouseInput();
+//		int ofs = Mouse.getEventDWheel();
+//
+//		if (ofs != 0) {
+//			guiNbtTree.shift((ofs >= 1) ? 6 : -6);
+//		}
+//
+//	}
+//
+//	public void updateScreen() {
+//		if (!mc.player.isEntityAlive())
+//			quitWithoutSaving();
+//		else
+//			guiNbtTree.updateScreen();
+//	}
+
+	protected void onSaveButtonClicked(Button button) {
+		quit(true);
+	}
+
+	protected void onQuitButtonClicked(Button button) {
+		quit(false);
+	}
+
+	protected void quit(boolean saving) {
+		if (saving) {
+			if (isEntity) {
+				NBTEditNetworking.getInstance().getChannel().sendToServer(
+						new C2SEntityNBTSavePacket(uuid, guiNbtTree.getNBTTree().toCompound()));
+			} else {
+				NBTEditNetworking.getInstance().getChannel().sendToServer(
+						new C2STileNBTSavePacket(pos, guiNbtTree.getNBTTree().toCompound()));
+			}
+		}
+
+		assert getMinecraft() != null;
+		getMinecraft().setScreen(null);
+		getMinecraft().cursorEntered();
+	}
+
+	@Override
+	public void render(PoseStack stack, int x, int y, float partialTick) {
+		super.render(stack, x, y, partialTick);
+
+		renderBackground(stack);
+		guiNbtTree.draw(stack, x, y);
+		drawCenteredString(stack, font, getTitle(), width / 2, 5, 19777215);
+
+		if (guiNbtTree.getWindow() == null) {
+			render(stack, x, y, partialTick);
+		} else {
+			render(stack, -1, -1, partialTick);
+		}
+	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return true;
+	}
+
+	public UUID getEntityUuid() {
+		return uuid;
 	}
 
 	public boolean isTileEntity() {
-		return !entity;
+		return !isEntity;
 	}
 
-	public int getBlockX() {
-		return entity ? 0 : entityOrX;
+	public BlockPos getBlockPos() {
+		if (isEntity) {
+			throw new UnsupportedOperationException("Cannot get block position of an entity!");
+		}
+
+		return pos;
 	}
 
+	@Override
+	public Minecraft getMinecraft() {
+		return super.getMinecraft();
+	}
+
+	protected void setMinecraft(Minecraft mc) {
+		minecraft = mc;
+	}
 }

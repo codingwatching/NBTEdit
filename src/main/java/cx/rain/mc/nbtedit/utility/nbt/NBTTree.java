@@ -1,11 +1,11 @@
-package cx.rain.mc.nbtedit.nbt;
+package cx.rain.mc.nbtedit.utility.nbt;
 
 import java.util.*;
 
 import net.minecraft.nbt.CompoundTag;
 
 import cx.rain.mc.nbtedit.NBTEdit;
-import cx.rain.mc.nbtedit.utility.NBTHelper;
+import cx.rain.mc.nbtedit.utility.NBTIOHelper;
 import cx.rain.mc.nbtedit.NBTStringHelper;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -64,7 +64,7 @@ public class NBTTree {
 	public void addChildrenToTree(Node<NamedNBT> parent) {
 		Tag tag = parent.getObject().getTag();
 		if (tag instanceof CompoundTag) {
-			Map<String, Tag> map = NBTHelper.getMap((CompoundTag) tag);
+			Map<String, Tag> map = NBTIOHelper.getMap((CompoundTag) tag);
 			for (Map.Entry<String, Tag> entry : map.entrySet()) {
 				Tag base = entry.getValue();
 				Node<NamedNBT> child = new Node<>(parent, new NamedNBT(entry.getKey(), base));
@@ -75,7 +75,7 @@ public class NBTTree {
 		} else if (tag instanceof ListTag) {
 			ListTag list = (ListTag) tag;
 			for (int i = 0; i < list.size(); ++i) {
-				Tag base = NBTHelper.getTagAt(list, i);
+				Tag base = NBTIOHelper.getTagAt(list, i);
 				Node<NamedNBT> child = new Node<>(parent, new NamedNBT(base));
 				parent.addChild(child);
 				addChildrenToTree(child);

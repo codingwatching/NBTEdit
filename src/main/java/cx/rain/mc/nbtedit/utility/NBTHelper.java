@@ -1,63 +1,69 @@
 package cx.rain.mc.nbtedit.utility;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.handler.codec.EncoderException;
+import com.google.common.base.Strings;
+import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
 import net.minecraft.nbt.*;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class NBTHelper {
+	public static final char SECTION_SIGN = '\u00A7';
 
-	public static CompoundTag read(DataInputStream in) throws IOException {
-		return NbtIo.read(in);
+	public static String getNBTName(NamedNBT namedNBT) {
+		String name = namedNBT.getName();
+		Tag tag = namedNBT.getTag();
+
+		String s = tag.getAsString();
+		return Strings.isNullOrEmpty(name) ? "" + s : name + ": " + s;
 	}
 
-	public static void write(CompoundTag compound, DataOutput out) throws IOException {
-		NbtIo.write(compound, out);
+	public static String getNBTNameSpecial(NamedNBT namedNBT) {
+		String name = namedNBT.getName();
+		Tag tag = namedNBT.getTag();
+
+		String s = tag.getAsString();
+		return Strings.isNullOrEmpty(name) ? "" + s : name + ": " + s + SECTION_SIGN + 'r';
 	}
 
-	public static Map<String, Tag> getMap(CompoundTag tag) {
-		return ObfuscationReflectionHelper.getPrivateValue(CompoundTag.class, tag, "tags");
+	public static String toString(Tag tag) {
+		return tag.getAsString();
 	}
 
-	public static Tag getTagAt(ListTag tag, int index) {
-		List<Tag> list = ObfuscationReflectionHelper.getPrivateValue(ListTag.class, tag, "list");
-		return list.get(index);
+	public static Tag newTag(byte type) {
+		return switch (type) {
+			case 0 -> EndTag.INSTANCE;
+			case 1 -> ByteTag.valueOf((byte) 0);
+			case 2 -> ShortTag.valueOf((short) 0);
+			case 3 -> IntTag.valueOf(0);
+			case 4 -> LongTag.valueOf(0);
+			case 5 -> FloatTag.valueOf(0.0f);
+			case 6 -> DoubleTag.valueOf(0.0);
+			case 7 -> new ByteArrayTag(new byte[0]);
+			case 8 -> StringTag.valueOf("");
+			case 9 -> new ListTag();
+			case 10 -> new CompoundTag();
+			case 11 -> new IntArrayTag(new int[0]);
+			default -> null;
+		};
 	}
 
-	public static void write(CompoundTag nbt, ByteBuf buf) {
-		if (nbt == null) {
-			buf.writeByte(0);
-		} else {
-			try {
-				NbtIo.write(nbt, new ByteBufOutputStream(buf));
-			} catch (IOException e) {
-				throw new EncoderException(e);
-			}
-		}
-	}
-
-	public static CompoundTag read(ByteBuf buf) {
-		int index = buf.readerIndex();
-		byte isNull = buf.readByte();
-
-		if (isNull == 0) {
-			return null;
-		} else {
-			// restore index after checking to make sure the tag wasn't null/
-			buf.readerIndex(index);
-			try {
-				return NbtIo.read(new ByteBufInputStream(buf), new NbtAccounter(2097152L));
-			} catch (IOException ioexception) {
-				throw new EncoderException(ioexception);
-			}
-		}
+	public static String getButtonName(byte id) {
+		return switch (id) {
+			case 1 -> "Byte";
+			case 2 -> "Short";
+			case 3 -> "Int";
+			case 4 -> "Long";
+			case 5 -> "Float";
+			case 6 -> "Double";
+			case 7 -> "Byte[]";
+			case 8 -> "String";
+			case 9 -> "List";
+			case 10 -> "Compound";
+			case 11 -> "Int[]";
+			case 12 -> "Edit";
+			case 13 -> "Delete";
+			case 14 -> "Copy";
+			case 15 -> "Cut";
+			case 16 -> "Paste";
+			default -> "Unknown";
+		};
 	}
 }

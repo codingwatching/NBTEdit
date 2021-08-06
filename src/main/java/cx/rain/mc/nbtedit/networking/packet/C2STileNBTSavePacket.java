@@ -1,18 +1,15 @@
 package cx.rain.mc.nbtedit.networking.packet;
 
 import cx.rain.mc.nbtedit.NBTEdit;
-import cx.rain.mc.nbtedit.utility.NBTHelper;
 import cx.rain.mc.nbtedit.utility.LogHelper;
 import cx.rain.mc.nbtedit.utility.PermissionHelper;
 import cx.rain.mc.nbtedit.utility.PlayerMessageHelper;
-import cx.rain.mc.nbtedit.utility.translation.TranslatableLanguage;
 import cx.rain.mc.nbtedit.utility.translation.TranslateKeys;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;

@@ -1,4 +1,4 @@
-package cx.rain.mc.nbtedit.nbt;
+package cx.rain.mc.nbtedit.utility.nbt;
 
 import cx.rain.mc.nbtedit.NBTEdit;
 import net.minecraft.nbt.CompoundTag;

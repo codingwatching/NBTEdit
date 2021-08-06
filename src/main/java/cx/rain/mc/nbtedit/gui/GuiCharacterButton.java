@@ -1,34 +1,35 @@
 package cx.rain.mc.nbtedit.gui;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
 
 public class GuiCharacterButton extends Gui {
 	public static final int WIDTH = 14, HEIGHT = 14;
 
-	private Minecraft mc = Minecraft.getMinecraft();
+	private Minecraft mc = Minecraft.getInstance();
 	private byte id;
 	private int x, y;
 	private boolean enabled;
 
-
 	public GuiCharacterButton(byte id, int x, int y) {
+		super(Minecraft.getInstance());
 		this.id = id;
 		this.x = x;
 		this.y = y;
 	}
 
-	public void draw(int mx, int my) {
-		mc.renderEngine.bindTexture(GuiNBTNode.WIDGET_TEXTURE);
+	public void draw(PoseStack stack, int mx, int my) {
+		mc.textureManager.bindForSetup(GuiNBTNode.WIDGET_TEXTURE);
 		if (inBounds(mx, my))
-			Gui.drawRect(x, y, x + WIDTH, y + HEIGHT, 0x80ffffff);
+			Gui.fill(stack, x, y, x + WIDTH, y + HEIGHT, 0x80ffffff);
 
 		if (enabled) {
-			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-		} else GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
+			GlStateManager._clearColor(1.0F, 1.0F, 1.0F, 1.0F);
+		} else GlStateManager._clearColor(0.5F, 0.5F, 0.5F, 1.0F);
 
-		drawTexturedModalRect(x, y, id * WIDTH, 27, WIDTH, HEIGHT);
+		blit(stack, x, y, id * WIDTH, 27, WIDTH, HEIGHT);
 	}
 
 	public void setEnabled(boolean aFlag) {

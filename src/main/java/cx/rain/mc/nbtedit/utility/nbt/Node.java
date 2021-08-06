@@ -1,4 +1,4 @@
-package cx.rain.mc.nbtedit.nbt;
+package cx.rain.mc.nbtedit.utility.nbt;
 
 import java.util.ArrayList;
 import java.util.List;

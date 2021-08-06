@@ -1,9 +1,9 @@
 package cx.rain.mc.nbtedit;
 
 import cx.rain.mc.nbtedit.config.NBTEditConfigs;
-import cx.rain.mc.nbtedit.nbt.NBTNodeSorter;
-import cx.rain.mc.nbtedit.nbt.NamedNBT;
-import cx.rain.mc.nbtedit.nbt.ClipboardStates;
+import cx.rain.mc.nbtedit.utility.nbt.NBTNodeSorter;
+import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
+import cx.rain.mc.nbtedit.utility.nbt.ClipboardStates;
 import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;

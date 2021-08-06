@@ -16,7 +16,13 @@ public enum TranslateKeys {
     MESSAGE_NO_ANY_TARGET("messages.no_any_target"),
     MESSAGE_CANNOT_EDIT_OTHER_PLAYER("messages.cannot_edit_other_player"),
     MESSAGE_UNKNOWN_ENTITY_ID("messages.unknown_entity_id"),
-    MESSAGE_SAVE_FAILED_ENTITY_NOT_EXISTS("messages.entity_not_exists")
+    MESSAGE_SAVE_FAILED_ENTITY_NOT_EXISTS("messages.entity_not_exists"),
+    TITLE_NBTEDIT_ENTITY_GUI("title.nbtedit_entity_gui"),
+    TITLE_NBTEDIT_TILE_GUI("title.nbtedit_tile_gui"),
+    
+    BUTTON_SAVE("button.save"),
+    BUTTON_QUIT("button.quit"),
+
     ;
 
     private String key;

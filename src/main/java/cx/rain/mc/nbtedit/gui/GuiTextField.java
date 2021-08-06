@@ -1,5 +1,8 @@
 package cx.rain.mc.nbtedit.gui;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.*;
+import cx.rain.mc.nbtedit.utility.NBTHelper;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -7,8 +10,6 @@ import net.minecraft.client.gui.Gui;
 
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.opengl.GL11;
-
-import cx.rain.mc.nbtedit.NBTStringHelper;
 
 public class GuiTextField extends Gui {
 	private final Font font;
@@ -23,7 +24,9 @@ public class GuiTextField extends Gui {
 	private boolean isFocused = false;
 
 	private boolean isEnabled = true;
-	private int field_73816_n = 0;
+
+	private int field_73816_n = 0;	// Todo: AS: What is it mean?
+
 	private int cursorPosition = 0;
 
 	/**
@@ -40,14 +43,14 @@ public class GuiTextField extends Gui {
 	private boolean enableBackgroundDrawing = true;
 	private boolean allowSection;
 
-	public GuiTextField(Font fontIn, int x, int y, int w, int h, boolean allowSection) {
+	public GuiTextField(Font fontIn, int x, int y, int w, int h, boolean allowSectionIn) {
 		super(Minecraft.getInstance());
 		font = fontIn;
 		xPos = x;
 		yPos = y;
 		width = w;
 		height = h;
-		allowSection = allowSection;
+		allowSection = allowSectionIn;
 	}
 
 	/**
@@ -81,8 +84,8 @@ public class GuiTextField extends Gui {
 	 * @return returns the text between the cursor and selectionEnd
 	 */
 	public String getSelectedtext() {
-		int var1 = cursorPosition < selectionEnd ? cursorPosition : selectionEnd;
-		int var2 = cursorPosition < selectionEnd ? selectionEnd : cursorPosition;
+		var var1 = Math.min(cursorPosition, selectionEnd);
+		var var2 = Math.max(cursorPosition, selectionEnd);
 		return text.substring(var1, var2);
 	}
 
@@ -90,11 +93,11 @@ public class GuiTextField extends Gui {
 	 * replaces selected text, or inserts text at the position on the cursor
 	 */
 	public void writeText(String par1Str) {
-		String var2 = "";
-		String var3 = CharacterFilter.filerAllowedCharacters(par1Str, allowSection);
-		int var4 = cursorPosition < selectionEnd ? cursorPosition : selectionEnd;
-		int var5 = cursorPosition < selectionEnd ? selectionEnd : cursorPosition;
-		int var6 = maxStringLength - text.length() - (var4 - selectionEnd);
+		var var2 = "";
+		var var3 = CharacterFilter.filerAllowedCharacters(par1Str, allowSection);
+		var var4 = Math.min(cursorPosition, selectionEnd);
+		var var5 = Math.max(cursorPosition, selectionEnd);
+		var var6 = maxStringLength - text.length() - (var4 - selectionEnd);
 
 		if (text.length() > 0) {
 			var2 = var2 + text.substring(0, var4);
@@ -140,9 +143,9 @@ public class GuiTextField extends Gui {
 			if (selectionEnd != cursorPosition) {
 				writeText("");
 			} else {
-				boolean var2 = par1 < 0;
-				int var3 = var2 ? cursorPosition + par1 : cursorPosition;
-				int var4 = var2 ? cursorPosition : cursorPosition + par1;
+				var var2 = par1 < 0;
+				var var3 = var2 ? cursorPosition + par1 : cursorPosition;
+				var var4 = var2 ? cursorPosition : cursorPosition + par1;
 				String var5 = "";
 
 				if (var3 >= 0) {
@@ -219,7 +222,7 @@ public class GuiTextField extends Gui {
 	 */
 	public void setCursorPosition(int par1) {
 		cursorPosition = par1;
-		int var2 = text.length();
+		var var2 = text.length();
 
 		if (cursorPosition < 0) {
 			cursorPosition = 0;
@@ -249,7 +252,7 @@ public class GuiTextField extends Gui {
 	/**
 	 * Call this method from you GuiScreen to process the keys into textbox.
 	 */
-	public boolean textboxKeyTyped(char par1, int par2) {
+	public boolean textBoxCharTyped(char par1, int par2) {
 		if (isEnabled && isFocused) {
 			switch (par1) {
 				case 1:
@@ -346,7 +349,8 @@ public class GuiTextField extends Gui {
 	 * Args: x, y, buttonClicked
 	 */
 	public void mouseClicked(int par1, int par2, int par3) {
-		String displayString = text.replace(NBTStringHelper.SECTION_SIGN, '?');
+		// Todo: AS: Check it. If it crashed, change "\u00A7" to another character.
+		String displayString = text.replace(NBTHelper.SECTION_SIGN, '\u00A7');
 		boolean var4 = par1 >= xPos && par1 < xPos + width && par2 >= yPos && par2 < yPos + height;
 
 		setFocused(isEnabled && var4);
@@ -366,18 +370,19 @@ public class GuiTextField extends Gui {
 	/**
 	 * Draws the textbox
 	 */
-	public void drawTextBox() {
-		String textToDisplay = text.replace(NBTStringHelper.SECTION_SIGN, '?');
+	public void drawTextBox(PoseStack stack) {
+		// Todo: AS: Check it. If it crashed, change "\u00A7" to another character.
+		String textToDisplay = text.replace(NBTHelper.SECTION_SIGN, '\u00A7');
 		if (getVisible()) {
 			if (getEnableBackgroundDrawing()) {
-				fill(xPos - 1, yPos - 1, xPos + width + 1, yPos + height + 1, -6250336);
-				drawRect(xPos, yPos, xPos + width, yPos + height, -16777216);
+				fill(stack, xPos - 1, yPos - 1, xPos + width + 1, yPos + height + 1, -6250336);
+				fill(stack, xPos, yPos, xPos + width, yPos + height, -16777216);
 			}
 
 			int var1 = isEnabled ? enabledColor : disabledColor;
 			int var2 = cursorPosition - field_73816_n;
 			int var3 = selectionEnd - field_73816_n;
-			String var4 = font.trimStringToWidth(textToDisplay.substring(field_73816_n), getWidth());
+			String var4 = font.plainSubstrByWidth(textToDisplay.substring(field_73816_n), getWidth());
 			boolean var5 = var2 >= 0 && var2 <= var4.length();
 			boolean var6 = isFocused && cursorCounter / 6 % 2 == 0 && var5;
 			int var7 = enableBackgroundDrawing ? xPos + 4 : xPos;
@@ -390,7 +395,7 @@ public class GuiTextField extends Gui {
 
 			if (var4.length() > 0) {
 				String var10 = var5 ? var4.substring(0, var2) : var4;
-				var9 = font.drawStringWithShadow(var10, var7, var8, var1);
+				var9 = font.drawShadow(stack, var10, var7, var8, var1);
 			}
 
 			boolean var13 = cursorPosition < text.length() || text.length() >= getMaxStringLength();
@@ -404,20 +409,21 @@ public class GuiTextField extends Gui {
 			}
 
 			if (var4.length() > 0 && var5 && var2 < var4.length()) {
-				font.drawStringWithShadow(var4.substring(var2), var9, var8, var1);
+				font.drawShadow(stack, var4.substring(var2), var9, var8, var1);
 			}
 
 			if (var6) {
 				if (var13) {
-					Gui.drawRect(var11, var8 - 1, var11 + 1, var8 + 1 + font.FONT_HEIGHT, -3092272);
+					Gui.fill(stack, var11, var8 - 1, var11 + 1,
+							var8 + 1 + font.lineHeight, -3092272);
 				} else {
-					font.drawStringWithShadow("_", var11, var8, var1);
+					font.drawShadow(stack, "_", var11, var8, var1);
 				}
 			}
 
 			if (var3 != var2) {
-				int var12 = var7 + font.getStringWidth(var4.substring(0, var3));
-				drawCursorVertical(var11, var8 - 1, var12 - 1, var8 + 1 + font.FONT_HEIGHT);
+				int var12 = var7 + font.width(var4.substring(0, var3));
+				drawCursorVertical(var11, var8 - 1, var12 - 1, var8 + 1 + font.lineHeight);
 			}
 		}
 	}
@@ -440,21 +446,21 @@ public class GuiTextField extends Gui {
 			par4 = var5;
 		}
 
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder worldRenderer = tessellator.getBuffer();
+		var tesselator = Tesselator.getInstance();
+		var bufferBuilder = tesselator.getBuilder();
 		GL11.glColor4f(0.0F, 0.0F, 255.0F, 255.0F);
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableColorLogic();
-		GlStateManager.colorLogicOp(GL11.GL_OR_REVERSE);
+		GlStateManager._disableTexture();
+		GlStateManager._enableColorLogicOp();
+		GlStateManager._logicOp(GL11.GL_OR_REVERSE);
 
-		worldRenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-		worldRenderer.pos((double) par1, (double) par4, 0.0D);
-		worldRenderer.pos((double) par3, (double) par4, 0.0D);
-		worldRenderer.pos((double) par3, (double) par2, 0.0D);
-		worldRenderer.pos((double) par1, (double) par2, 0.0D);
-		tessellator.draw();
-		GlStateManager.disableColorLogic();
-		GlStateManager.enableTexture2D();
+		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		bufferBuilder.vertex(par1, par4, 0.0D);
+		bufferBuilder.vertex(par3, par4, 0.0D);
+		bufferBuilder.vertex(par3, par2, 0.0D);
+		bufferBuilder.vertex(par1, par2, 0.0D);
+		tesselator.end();
+		GlStateManager._disableColorLogicOp();
+		GlStateManager._enableTexture();
 	}
 
 	public void setMaxStringLength(int par1) {
@@ -544,8 +550,9 @@ public class GuiTextField extends Gui {
 	 * Sets the position of the selection anchor (i.e. position the selection was started at)
 	 */
 	public void setSelectionPos(int par1) {
-		String displayString = text.replace(NBTStringHelper.SECTION_SIGN, '?');
-		int var2 = displayString.length();
+		// Todo: AS: Check it. If it crashed, change "\u00A7" to another character.
+		var displayString = text.replace(NBTHelper.SECTION_SIGN, '\u00A7');
+		var var2 = displayString.length();
 
 		if (par1 > var2) {
 			par1 = var2;
@@ -563,11 +570,11 @@ public class GuiTextField extends Gui {
 			}
 
 			int var3 = getWidth();
-			String var4 = font.trimStringToWidth(displayString.substring(field_73816_n), var3);
+			String var4 = font.plainSubstrByWidth(displayString.substring(field_73816_n), var3);
 			int var5 = var4.length() + field_73816_n;
 
 			if (par1 == field_73816_n) {
-				field_73816_n -= font.trimStringToWidth(displayString, var3, true).length();
+				field_73816_n -= font.plainSubstrByWidth(displayString, var3, true).length();
 			}
 
 			if (par1 > var5) {

@@ -1,15 +1,14 @@
 package cx.rain.mc.nbtedit.gui;
 
-import net.minecraft.util.ChatAllowedCharacters;
-
-import cx.rain.mc.nbtedit.NBTStringHelper;
+import cx.rain.mc.nbtedit.utility.NBTHelper;
+import net.minecraft.SharedConstants;
 
 public class CharacterFilter {
 	public static String filerAllowedCharacters(String str, boolean section) {
 		StringBuilder sb = new StringBuilder();
 		char[] arr = str.toCharArray();
 		for (char c : arr) {
-			if (ChatAllowedCharacters.isAllowedCharacter(c) || (section && (c == NBTStringHelper.SECTION_SIGN || c == '\n')))
+			if (SharedConstants.isAllowedChatCharacter(c) || (section && (c == NBTHelper.SECTION_SIGN || c == '\n')))
 				sb.append(c);
 		}
 
