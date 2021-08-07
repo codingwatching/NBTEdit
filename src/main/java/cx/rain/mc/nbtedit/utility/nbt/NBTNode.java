@@ -25,8 +25,8 @@ public class NBTNode<T> {
 		return showChildren;
 	}
 
-	public void setShowChildren(boolean draw) {
-		showChildren = draw;
+	public void setShowChildren(boolean show) {
+		showChildren = show;
 	}
 
 	public NBTNode(NBTNode<T> parent) {

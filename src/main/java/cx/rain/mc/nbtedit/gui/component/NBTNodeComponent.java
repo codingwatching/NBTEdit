@@ -1,5 +1,6 @@
 package cx.rain.mc.nbtedit.gui.component;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.gui.NBTEditGui;
@@ -31,6 +32,8 @@ public class NBTNodeComponent extends AbstractWidget {
 
         gui = guiIn;
         node = nodeIn;
+
+        update();
     }
 
     protected Minecraft getMinecraft() {
@@ -89,12 +92,12 @@ public class NBTNodeComponent extends AbstractWidget {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
-        boolean isSelected = gui.getFocused() == node;
-        boolean isTextHover = isMouseInsideText(mouseX, mouseY);
-        boolean isSpoilerHover = isMouseInsideSpoiler(mouseX, mouseY);
-        int color = isSelected ? 0xff : isTextHover ? 16777120 : (node.hasParent()) ? 14737632 : -6250336;
+        var isSelected = gui.getFocused() == node;
+        var isTextHover = isMouseInsideText(mouseX, mouseY);
+        var isSpoilerHover = isMouseInsideSpoiler(mouseX, mouseY);
+        var color = isSelected ? 0xff : isTextHover ? 16777120 : (node.hasParent()) ? 14737632 : -6250336;
 
-        getMinecraft().textureManager.bindForSetup(WIDGET_TEXTURE);
+        RenderSystem.setShaderTexture(0, WIDGET_TEXTURE);
 
         if (isSelected) {
             Gui.fill(stack, x + 11, y, x + width, y + height, Integer.MIN_VALUE);

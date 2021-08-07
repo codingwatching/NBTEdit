@@ -1,5 +1,6 @@
 package cx.rain.mc.nbtedit.gui.component.button;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.gui.NBTEditGui;
@@ -41,14 +42,15 @@ public class NBTOperatorButton extends Button {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTick) {
-        getMinecraft().textureManager.bindForSetup(BUTTONS_TEXTURE);
+        RenderSystem.setShaderTexture(0, BUTTONS_TEXTURE);
 
         if (isMouseInside(mouseX, mouseY)) {    //checks if the mouse is over the button
             Gui.fill(stack, x, y, x + width, y + height, 0x80ffffff);   //draw a grayish background
             if (hoverTime == -1)
                 hoverTime = System.currentTimeMillis();
-        } else
+        } else {
             hoverTime = -1;
+        }
 
         if (isActive()) {
             // AS: A very hacky way to draw button's texture.

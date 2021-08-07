@@ -1,10 +1,8 @@
 package cx.rain.mc.nbtedit.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.gui.component.EditSubWindowComponent;
 import cx.rain.mc.nbtedit.gui.component.NBTNodeComponent;
@@ -17,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -63,7 +62,7 @@ public class NBTEditGui extends Gui {
     protected int heightDiff;
     protected int heightOffset;
 
-    protected int yClick;
+    protected int yClick = -1;
 
     protected EditSubWindowComponent subWindow = null;
 
@@ -112,6 +111,7 @@ public class NBTEditGui extends Gui {
         bottom = bottomIn;
 
         yClick = -1;
+        init(false);
 
         if (subWindow != null) {
             subWindow.init((width - EditSubWindowComponent.WIDTH) / 2,
@@ -157,7 +157,7 @@ public class NBTEditGui extends Gui {
     // Focus start.
 
     private void addNodes(NBTNode<NamedNBT> root, int start_x) {
-        nodes.add(new NBTNodeComponent(x, y,
+        nodes.add(new NBTNodeComponent(start_x, y,
                 new TextComponent(NBTHelper.getNBTNameSpecial(root.get())), this, root));
 
         start_x += X_GAP;
@@ -271,6 +271,7 @@ public class NBTEditGui extends Gui {
         yLoc = 17;
         for (var i = 1; i < 12; i++) {
             nbtButtons[i - 1] = new NBTOperatorButton(i, xLoc, yLoc, this, this::onAddNBTButtonsClick);
+            xLoc += 9;
         }
     }
 
@@ -317,7 +318,31 @@ public class NBTEditGui extends Gui {
     protected void onAddNBTButtonsClick(Button button) {
         if (button instanceof NBTOperatorButton nbtOperator) {
             if (nbtOperator.getButtonId() >= 0 && nbtOperator.getButtonId() <= 11) {
-                doPaste();
+                if (focused != null) {
+                    focused.setShowChildren(true);
+                    var children = focused.getChildren();
+                    String type = button.getMessage().getString();
+
+                    if (focused.get().getTag() instanceof ListTag) {
+                        var nbt = NBTHelper.newTag((nbtOperator.getButtonId()));
+                        if (nbt != null) {
+                            var newNode = new NBTNode<>(focused, new NamedNBT("", nbt));
+                            children.add(newNode);
+                            setFocused(newNode);
+                        }
+                    } else if (children.size() == 0) {
+                        setFocused(insertNode(type + "1", nbtOperator.getButtonId()));
+                    } else {
+                        for (int i = 1; i <= children.size() + 1; ++i) {
+                            String name = type + i;
+                            if (isNameValid(name, children)) {
+                                setFocused(insertNode(name, nbtOperator.getButtonId()));
+                                break;
+                            }
+                        }
+                    }
+                    init(true);
+                }
             }
         }
     }
@@ -355,36 +380,38 @@ public class NBTEditGui extends Gui {
     }
 
     private void doPaste() {
-        if (NBTEdit.CLIPBOARD != null) {
-            focused.setShowChildren(true);
+        if (focused != null) {
+            if (NBTEdit.CLIPBOARD != null) {
+                focused.setShowChildren(true);
 
-            var namedNBT = NBTEdit.CLIPBOARD.copy();
-            if (focused.get().getTag() instanceof ListTag) {
-                namedNBT.setName("");
-                var node = new NBTNode<>(focused, namedNBT);
-                focused.addChild(node);
-                tree.addChildrenToTree(node);
-                tree.sort(node);
-                setFocused(node);
-            } else {
-                String name = namedNBT.getName();
-                List<NBTNode<NamedNBT>> children = focused.getChildren();
-                if (!isNameValid(name, children)) {
-                    for (int i = 1; i <= children.size() + 1; ++i) {
-                        String n = name + "(" + i + ")";
-                        if (isNameValid(n, children)) {
-                            namedNBT.setName(n);
-                            break;
+                var namedNBT = NBTEdit.CLIPBOARD.copy();
+                if (focused.get().getTag() instanceof ListTag) {
+                    namedNBT.setName("");
+                    var node = new NBTNode<>(focused, namedNBT);
+                    focused.addChild(node);
+                    tree.addChildrenToTree(node);
+                    tree.sort(node);
+                    setFocused(node);
+                } else {
+                    String name = namedNBT.getName();
+                    List<NBTNode<NamedNBT>> children = focused.getChildren();
+                    if (!isNameValid(name, children)) {
+                        for (int i = 1; i <= children.size() + 1; ++i) {
+                            String n = name + "(" + i + ")";
+                            if (isNameValid(n, children)) {
+                                namedNBT.setName(n);
+                                break;
+                            }
                         }
                     }
+                    NBTNode<NamedNBT> node = insertNode(namedNBT);
+                    tree.addChildrenToTree(node);
+                    tree.sort(node);
+                    setFocused(node);
                 }
-                NBTNode<NamedNBT> node = insertNode(namedNBT);
-                tree.addChildrenToTree(node);
-                tree.sort(node);
-                setFocused(node);
-            }
 
-            init(true);
+                init(true);
+            }
         }
     }
 
@@ -615,14 +642,16 @@ public class NBTEditGui extends Gui {
     private void renderBackground(PoseStack stack, int bottom, int height, int alpha1, int alpha2) {
         var tesselator = Tesselator.getInstance();
         var builder = tesselator.getBuilder();
-        getMinecraft().textureManager.bindForSetup(BACKGROUND_LOCATION);
-        var var6 = 32.0F;
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, BACKGROUND_LOCATION);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        var f = 32.0F;
         var color = new Color(4210752);
-        builder.vertex(0.0D, height, 0.0D).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).uv(0.0f, (float) height / var6).endVertex();
-        builder.vertex(width, height, 0.0D).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).uv((float) width / var6, (float) height / var6).endVertex();
-        builder.vertex(width, bottom, 0.0D).color(color.getRed(), color.getGreen(), color.getBlue(), alpha1).uv((float) width / var6, (float) bottom / var6).endVertex();
-        builder.vertex(0.0D, bottom, 0.0D).color(color.getRed(), color.getGreen(), color.getBlue(), alpha1).uv(0.0f, (float) bottom / var6).endVertex();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        builder.vertex(0.0D, height, 0.0D).uv(0.0f, (float) height / f).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).endVertex();
+        builder.vertex(width, height, 0.0D).uv((float) width / f, (float) height / f).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).endVertex();
+        builder.vertex(width, bottom, 0.0D).uv((float) width / f, (float) bottom / f).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).endVertex();
+        builder.vertex(0.0D, bottom, 0.0D).uv(0.0f, (float) bottom / f).color(color.getRed(), color.getGreen(), color.getBlue(), alpha2).endVertex();
         tesselator.end();
     }
 
@@ -630,8 +659,81 @@ public class NBTEditGui extends Gui {
 
     // Interact start.
 
-    public void onMouseRelease(int mouseX, int mouseY, int partialTick) {
+    public void onMouseClicked(int mouseX, int mouseY, int partialTick) {
+        if (subWindow == null) {
+            boolean reInit = false;
 
+            for (var node : nodes) {
+                if (node.spoilerClicked(mouseX, mouseY)) { // Check hide/show children buttons
+                    reInit = true;
+                    if (node.shouldShowChildren()) {
+                        heightOffset = (START_Y + 1) - (node.y) + heightOffset;
+                    }
+                    break;
+                }
+            }
+
+            if (!reInit) {
+                for (var button : nbtButtons) { //Check top buttons
+                    if (button.isMouseInside(mouseX, mouseY)) {
+                        onAddNBTButtonsClick(button);
+                        return;
+                    }
+                }
+
+                if (nbtCopyButton.isMouseInside(mouseX, mouseY)) {
+                    onCopyButtonClick(nbtCopyButton);
+                }
+
+                if (nbtCutButton.isMouseInside(mouseX, mouseY)) {
+                    onCutButtonClick(nbtCutButton);
+                }
+
+                if (nbtPasteButton.isMouseInside(mouseX, mouseY)) {
+                    onPasteButtonClick(nbtPasteButton);
+                }
+
+                if (nbtEditButton.isMouseInside(mouseX, mouseY)) {
+                    onEditButtonClick(nbtEditButton);
+                }
+
+                if (nbtDeleteButton.isMouseInside(mouseX, mouseY)) {
+                    onDeleteButtonClick(nbtDeleteButton);
+                }
+
+                for (var button : saves) {
+                    if (button.isMouseInside(mouseX, mouseY)) {
+                        button.reset();
+                        NBTEdit.getClipboardSaves().save();
+                        getMinecraft().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                        return;
+                    }
+
+                    if (button.isMouseInside(mouseX, mouseY)) {
+                        onSaveSlotClicked(button);
+                        return;
+                    }
+                }
+                if (mouseY >= START_Y && mouseX <= width - 175) { //Check actual nodes, remove focus if nothing clicked
+                    NBTNode<NamedNBT> newFocus = null;
+                    for (var node : nodes) {
+                        if (node.isTextClicked(mouseX, mouseY)) {
+                            newFocus = node.getNode();
+                            break;
+                        }
+                    }
+                    if (focusedSaveSlotIndex != -1) {
+                        stopEditingSlot();
+                    }
+
+                    setFocused(newFocus);
+                }
+            } else {
+                init(false);
+            }
+        } else {
+            subWindow.onMouseClicked(mouseX, mouseY, partialTick);
+        }
     }
 
     public void closeSubWindow() {
@@ -656,6 +758,12 @@ public class NBTEditGui extends Gui {
 
     // Keyboard interact start.
 
+    public void keyPressed(int mouseX, int mouseY, int delta) {
+        if (subWindow != null) {
+            subWindow.keyPressed(mouseX, mouseY, delta);
+        }
+    }
+
     public void arrowKeyPressed(boolean isUp) {
         if (focused == null) {
             shiftY((isUp) ? Y_GAP : -Y_GAP);
@@ -665,7 +773,9 @@ public class NBTEditGui extends Gui {
     }
 
     public void charTyped(char character, int keyId) {
-        if (focusedSaveSlotIndex != -1) {
+        if (subWindow != null) {
+            subWindow.charTyped(character, keyId);
+        } else if (focusedSaveSlotIndex != -1) {
             saves[focusedSaveSlotIndex].charTyped(character, keyId);
         } else {
             if (keyId == InputConstants.KEY_C && Screen.hasControlDown()) {

@@ -1,6 +1,7 @@
 package cx.rain.mc.nbtedit.gui.component.button;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
 import net.minecraft.client.Minecraft;
@@ -10,7 +11,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 
 public class SpecialCharacterButton extends Button {
-    public static final ResourceLocation BUTTON_WIDGET_TEXTURE =
+    public static final ResourceLocation WIDGET_TEXTURE =
             new ResourceLocation(NBTEdit.MODID, "textures/gui/widgets.png");
 
     protected int buttonId;
@@ -27,7 +28,8 @@ public class SpecialCharacterButton extends Button {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTick) {
-        getMinecraft().textureManager.bindForSetup(BUTTON_WIDGET_TEXTURE);
+        RenderSystem.setShaderTexture(0, WIDGET_TEXTURE);
+
         if (isMouseInside(mouseX, mouseY))
             Gui.fill(stack, x, y, x + width, y + height, 0x80ffffff);
 

@@ -16,22 +16,27 @@ public class C2SEntityRequestPacket {
 	 */
 	private UUID uuid;
 
+	private int id;
+
 	private boolean isMe;
 
-	public C2SEntityRequestPacket(UUID uuidIn, boolean isMeIn) {
+	public C2SEntityRequestPacket(UUID uuidIn, int idIn, boolean isMeIn) {
 		uuid = uuidIn;
+		id = idIn;
 		isMe = isMeIn;
 	}
 
 	public C2SEntityRequestPacket(ByteBuf buf) {
 		var packetBuf = new FriendlyByteBuf(buf);
 		uuid = packetBuf.readUUID();
+		id = packetBuf.readInt();
 		isMe = packetBuf.readBoolean();
 	}
 
 	public void toBytes(ByteBuf buf) {
 		var packetBuf = new FriendlyByteBuf(buf);
 		packetBuf.writeUUID(uuid);
+		packetBuf.writeInt(id);
 		packetBuf.writeBoolean(isMe);
 	}
 
@@ -40,7 +45,7 @@ public class C2SEntityRequestPacket {
 			ServerPlayer player = context.get().getSender();
 			NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
 					" requested entity with UUID " + uuid + ".");
-			NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid, isMe);
+			NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid, id, isMe);
 		});
 		context.get().setPacketHandled(true);
 	}

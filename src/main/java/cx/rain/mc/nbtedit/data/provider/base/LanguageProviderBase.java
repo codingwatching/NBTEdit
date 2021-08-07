@@ -1,5 +1,6 @@
 package cx.rain.mc.nbtedit.data.provider.base;
 
+import cx.rain.mc.nbtedit.utility.translation.TranslateKeys;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.CreativeModeTab;
@@ -19,5 +20,9 @@ public abstract class LanguageProviderBase extends LanguageProvider {
     public void addTooltip(RegistryObject<? extends Item> item, int line, String tooltip) {
         String name = item.getId().getPath();
         add("tooltip." + name + "." + line, tooltip);
+    }
+
+    public void addKey(TranslateKeys key, String string) {
+        add(key.getKey(), string);
     }
 }

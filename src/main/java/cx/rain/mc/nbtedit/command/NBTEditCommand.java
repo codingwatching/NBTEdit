@@ -3,6 +3,7 @@ package cx.rain.mc.nbtedit.command;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
 import cx.rain.mc.nbtedit.networking.packet.S2CRayTracePacket;
+import cx.rain.mc.nbtedit.utility.EntityHelper;
 import cx.rain.mc.nbtedit.utility.PermissionHelper;
 import com.mojang.brigadier.context.CommandContext;
 import cx.rain.mc.nbtedit.utility.translation.TranslatableLanguage;
@@ -56,7 +57,8 @@ public class NBTEditCommand {
         NBTEditNetworking.getInstance().getChannel().sendTo(new S2CRayTracePacket(),
                 player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 
-        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() + " issued command /nbtedit .");
+        NBTEdit.getInstance().getLog().info("Player " + player.getName().getString()
+                + " issued command /nbtedit.");
 
         return 1;
     }
@@ -70,9 +72,10 @@ public class NBTEditCommand {
 
         var player = (ServerPlayer) context.getSource().getEntity();
         var uuid = context.getArgument("entity_id", UUID.class);
-        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid, false);
+        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, uuid,
+                EntityHelper.getEntityByUuid(player.getServer(), uuid).getId(), false);
 
-        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
+        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName().getString() +
                 " issued command /nbtedit " + uuid + ".");
 
         return 1;
@@ -87,9 +90,10 @@ public class NBTEditCommand {
         assert context.getSource().getEntity() instanceof ServerPlayer;
 
         var player = (ServerPlayer) context.getSource().getEntity();
-        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, player.getUUID(), true);
+        NBTEditNetworking.getInstance().openEntityEditGUIResponse(player, player.getUUID(),
+                player.getId(), true);
 
-        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
+        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName().getString() +
                 " issued command /nbtedit with themselves.");
 
         return 1;
@@ -106,7 +110,7 @@ public class NBTEditCommand {
         var pos = context.getArgument("block_pos", BlockPos.class);
         NBTEditNetworking.getInstance().openTileEditGUIResponse(player, pos);
 
-        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
+        NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName().getString() +
                 " issued command /nbtedit " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + ".");
 
         return 1;
@@ -124,7 +128,7 @@ public class NBTEditCommand {
             source.sendFailure(new TextComponent(TranslatableLanguage.get()
                     .getOrDefault(TranslateKeys.MESSAGE_NO_PERMISSION.getKey())).withStyle(ChatFormatting.RED));
             NBTEdit.getInstance().getInternalLogger().info(
-                    "Player " + player.getName().getContents() + " tried use NBTEdit with no permission.");
+                    "Player " + player.getName().getString() + " tried use NBTEdit with no permission.");
             return false;
         }
 

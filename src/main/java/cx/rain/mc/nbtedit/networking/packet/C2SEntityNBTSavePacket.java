@@ -60,7 +60,7 @@ public class C2SEntityNBTSavePacket {
 	public void handler(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
 			final ServerPlayer player = context.get().getSender();
-			player.getServer().addTickable(() -> {
+			player.getServer().execute(() -> {
 				Entity entity = EntityHelper.getEntityByUuid(player.getServer(), uuid);
 				if (entity != null && PermissionHelper.checkPermission(player)) {
 					try {
@@ -69,7 +69,7 @@ public class C2SEntityNBTSavePacket {
 							prevGameMode = ((ServerPlayer) entity).gameMode.getGameModeForPlayer();
 						}
 						entity.load(tag);
-						NBTEdit.getInstance().getInternalLogger().info("Player" + player.getName() +
+						NBTEdit.getInstance().getInternalLogger().info("Player" + player.getName().getString() +
 								" edited the tag of Entity with UUID " + uuid + " .");
 						LogHelper.logNBTTag(NBTEdit.getInstance().getInternalLogger(), Level.INFO, tag);
 
@@ -103,7 +103,7 @@ public class C2SEntityNBTSavePacket {
 						PlayerMessageHelper.sendMessage(player, ChatFormatting.RED,
 								TranslateKeys.MESSAGE_SAVE_FAILED_INVALID_NBT);
 
-						NBTEdit.getInstance().getLog().error("Player " + player.getName() +
+						NBTEdit.getInstance().getLog().error("Player " + player.getName().getString() +
 								" edited the tag of an entity and caused an exception.");
 						LogHelper.logNBTTag(NBTEdit.getInstance().getInternalLogger(), Level.ERROR, tag);
 						NBTEdit.getInstance().getLog().error(new RuntimeException(ex));

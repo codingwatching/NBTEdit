@@ -1,5 +1,6 @@
 package cx.rain.mc.nbtedit.gui.component;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.gui.NBTEditGui;
@@ -24,7 +25,7 @@ public class EditSubWindowComponent extends AbstractWidget {
     public static final int WIDTH = 178;
     public static final int HEIGHT = 93;
 
-    protected CompoundTag nbt;
+    protected Tag nbt;
     protected NBTEditGui gui;
     protected NBTNode<NamedNBT> node;
     protected boolean canEditName;
@@ -48,6 +49,7 @@ public class EditSubWindowComponent extends AbstractWidget {
 
         gui = parent;
         node = nodeIn;
+        nbt = nodeIn.get().getTag();
         canEditName = canEditNameIn;
         canEditValue = canEditValueIn;
     }
@@ -66,14 +68,13 @@ public class EditSubWindowComponent extends AbstractWidget {
         valueField = new EditBox(getMinecraft().font, x + 46, y + 44, 116, 15, new TextComponent("Value"));
 
         nameField.setValue(name);
-        nameField.active = canEditName;
+        nameField.setEditable(canEditName);
+        nameField.setBordered(false);
 
         valueField.setMaxLength(256);
         valueField.setValue(value);
-        valueField.active = canEditValue;
-
-        saveButton = new Button(x + 9, y + 62, 75, 20,
-                new TextComponent("Save"), this::onSaveButtonClicked);	// Todo: AS: I18n here.
+        valueField.setEditable(canEditValue);
+        valueField.setBordered(false);
 
         if (!nameField.isFocused() && !valueField.isFocused()) {
             if (canEditName) {
@@ -87,8 +88,11 @@ public class EditSubWindowComponent extends AbstractWidget {
         colorButton.active = valueField.isFocused();
         newLineButton.active = valueField.isFocused();
 
+        saveButton = new Button(x + 9, y + 62, 75, 20,
+                new TextComponent("Save"), (button) -> {});	// Todo: AS: I18n here.
+
         cancelButton = new Button(x + 93, y + 62, 75, 20,
-                new TextComponent("Cancel"), this::onCancelButtonClicked);	// Todo: AS: I18n here.
+                new TextComponent("Cancel"), (button) -> {});	// Todo: AS: I18n here.
     }
 
     protected void onSaveButtonClicked(Button button) {
@@ -129,7 +133,7 @@ public class EditSubWindowComponent extends AbstractWidget {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
-        getMinecraft().textureManager.bindForSetup(WINDOW_TEXTURE);
+        RenderSystem.setShaderTexture(0, WINDOW_TEXTURE);
 
         blit(stack, x, y, 0, 0, width, height);
         if (!canEditName) {
@@ -152,8 +156,8 @@ public class EditSubWindowComponent extends AbstractWidget {
             drawCenteredString(stack, getMinecraft().font, nameError, x + width / 2, y + 32, 0xFF0000);
         }
 
-        colorButton.renderButton(stack, mouseX, mouseY, partialTicks);
-        newLineButton.renderButton(stack, mouseX, mouseY, partialTicks);
+        colorButton.render(stack, mouseX, mouseY, partialTicks);
+        newLineButton.render(stack, mouseX, mouseY, partialTicks);
     }
 
     public void update() {
@@ -164,6 +168,41 @@ public class EditSubWindowComponent extends AbstractWidget {
     public void setWindowTop(int xIn, int yIn) {
         x = xIn;
         y = yIn;
+    }
+
+    @Override
+    public boolean charTyped(char character, int keyId) {
+        if (nameField.isFocused()) {
+            nameField.charTyped(character, keyId);
+        } else {
+            valueField.charTyped(character, keyId);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean keyPressed(int mouseX, int mouseY, int delta) {
+        if (nameField.isFocused()) {
+            nameField.keyPressed(mouseX, mouseY, delta);
+        } else {
+            valueField.keyPressed(mouseX, mouseY, delta);
+        }
+        return true;
+    }
+
+    public void onMouseClicked(int mouseX, int mouseY, int partialTick) {
+        if (newLineButton.isMouseInside(mouseX, mouseY) && valueField.isFocused()) {
+            onNewLineButtonClicked(newLineButton);
+        } else if (colorButton.isMouseInside(mouseX, mouseY) && valueField.isFocused()) {
+            onColorButtonClicked(colorButton);
+        } else if (saveButton.isMouseOver(mouseX, mouseY)) {
+            onSaveButtonClicked(saveButton);
+        } else if (cancelButton.isMouseOver(mouseX, mouseY)) {
+            onCancelButtonClicked(cancelButton);
+        } else {
+            nameField.mouseClicked(mouseX, mouseY, partialTick);
+            valueField.mouseClicked(mouseX, mouseY, partialTick);
+        }
     }
 
     @Override

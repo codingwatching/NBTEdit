@@ -98,7 +98,7 @@ public class NBTEditNetworking {
 				.consumer(S2COpenEntityEditGUIPacket::handler)
 				.add();
 
-		NBTEdit.getInstance().getLog().info("Messages registered.");
+		NBTEdit.getInstance().getLog().info("Networking registered.");
 	}
 
 	/**
@@ -109,11 +109,10 @@ public class NBTEditNetworking {
 	 */
 	public void openTileEditGUIResponse(final ServerPlayer player, final BlockPos pos) {
 		if (PermissionHelper.checkPermission(player)) {
-			player.getServer().addTickable(() -> {
+			player.getServer().execute(() -> {
 				BlockEntity tile = player.getCommandSenderWorld().getBlockEntity(pos);
 				if (tile != null) {
-					CompoundTag tag = new CompoundTag();
-					tile.save(tag);
+					CompoundTag tag = tile.save(new CompoundTag());
 					CHANNEL.sendTo(new S2COpenTileEditGUIPacket(pos, tag),
 							player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 				} else {
@@ -132,9 +131,9 @@ public class NBTEditNetworking {
 	 * @param player   The player to send the Entity data to.
 	 * @param uuid The UUID of the Entity.
 	 */
-	public void openEntityEditGUIResponse(final ServerPlayer player, final UUID uuid, boolean isMe) {
+	public void openEntityEditGUIResponse(final ServerPlayer player, final UUID uuid, final int id, final boolean isMe) {
 		if (PermissionHelper.checkPermission(player)) {
-			player.getServer().addTickable(() -> {
+			player.getServer().execute(() -> {
 				Entity entity;
 				if (isMe) {
 					entity = player;
@@ -152,9 +151,8 @@ public class NBTEditNetworking {
 				}
 
 				if (entity != null) {
-					CompoundTag tag = new CompoundTag();
-					entity.save(tag);
-					CHANNEL.sendTo(new S2COpenEntityEditGUIPacket(uuid, tag, isMe),
+					CompoundTag tag = entity.saveWithoutId(new CompoundTag());
+					CHANNEL.sendTo(new S2COpenEntityEditGUIPacket(uuid, id, tag, isMe),
 							player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 				} else {
 					PlayerMessageHelper.sendMessage(player, ChatFormatting.RED,

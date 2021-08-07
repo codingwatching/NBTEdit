@@ -14,13 +14,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class NBTEditScreen extends Screen {
@@ -34,12 +32,13 @@ public class NBTEditScreen extends Screen {
 
     protected NBTEditGui gui;
 
-    public NBTEditScreen(UUID uuidIn, CompoundTag tag, boolean isMeIn) {
+    public NBTEditScreen(UUID uuidIn, int idIn, CompoundTag tag, boolean isMeIn) {
         super(new TranslatableComponent(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI.getKey(), uuidIn));
         minecraft = Minecraft.getInstance();
 
         isEntity = true;
         uuid = uuidIn;
+        id = idIn;
         isMe = isMeIn;
 
         gui = new NBTEditGui(new NBTTree(tag));
@@ -85,13 +84,12 @@ public class NBTEditScreen extends Screen {
 
         gui.init(width, height, height - 35);
 
-        addRenderableWidget(new Button(23, 17, width / 4 - 100, this.height - 27, new TextComponent("Save"), this::onSaveClicked));
-        addRenderableWidget(new Button(23, 17, width * 3 / 4 - 100, this.height - 27, new TextComponent("Quit"), this::onQuitClicked));
+        addRenderableWidget(new Button(width / 4 - 100, height - 27, 200, 20, new TextComponent("Save"), this::onSaveClicked));
+        addRenderableWidget(new Button(width * 3 / 4 - 100, height - 27, 200, 20, new TextComponent("Quit"), this::onQuitClicked));
     }
 
     private void onSaveClicked(Button button) {
         doSave();
-
         doClose();
     }
 
@@ -169,9 +167,15 @@ public class NBTEditScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double par1, double par2, int par3) {
-        gui.onMouseRelease(Mth.floor(par1), Mth.floor(par2), par3);
-        return super.mouseReleased(par1, par2, par3);
+    public boolean keyPressed(int mouseX, int mouseY, int delta) {
+        gui.keyPressed(mouseX, mouseY, delta);
+        return true;
+    }
+
+    @Override
+    public boolean mouseClicked(double par1, double par2, int par3) {
+        gui.onMouseClicked(Mth.floor(par1), Mth.floor(par2), par3);
+        return super.mouseClicked(par1, par2, par3);
     }
 
     @Override
@@ -185,5 +189,10 @@ public class NBTEditScreen extends Screen {
         } else {
             super.render(stack, -1, -1, partialTick);
         }
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return true;
     }
 }

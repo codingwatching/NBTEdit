@@ -49,7 +49,7 @@ public class C2STileNBTSavePacket {
 	public void handler(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(() -> {
 			final ServerPlayer player = context.get().getSender();
-			player.getServer().addTickable(() -> {
+			player.getServer().execute(() -> {
 				BlockEntity tile = player.getCommandSenderWorld().getBlockEntity(pos);
 				if (tile != null && PermissionHelper.checkPermission(player)) {
 					try {
@@ -59,7 +59,7 @@ public class C2STileNBTSavePacket {
 							((ServerLevel) tile.getLevel()).getChunkSource().blockChanged(pos);	// Broadcast changes.
 						}
 
-						NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName() +
+						NBTEdit.getInstance().getInternalLogger().info("Player " + player.getName().getString() +
 								" successfully edited the tag of a TileEntity at " +
 								pos.getX() + " " +
 								pos.getY() + " " +
@@ -75,7 +75,7 @@ public class C2STileNBTSavePacket {
 						// Todo: AS: I18n below.
 						// "Save Failed - Invalid NBT format for Tile Entity."
 
-						NBTEdit.getInstance().getInternalLogger().error("Player " + player.getName() +
+						NBTEdit.getInstance().getInternalLogger().error("Player " + player.getName().getString() +
 								" edited the tag of TileEntity and caused an exception.");
 						LogHelper.logNBTTag(NBTEdit.getInstance().getInternalLogger(), Level.ERROR, tag);
 						NBTEdit.getInstance().getLog().error(new RuntimeException(ex));

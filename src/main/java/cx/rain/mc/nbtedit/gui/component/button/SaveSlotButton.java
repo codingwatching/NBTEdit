@@ -30,9 +30,12 @@ public class SaveSlotButton extends Button {
 
         save = saveIn;
         rightX = xRight;
+//        text = (save.tag.isEmpty()
+//                ? TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_SAVE.getKey())
+//                : TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_LOAD.getKey())) + save.name;
         text = (save.tag.isEmpty()
-                ? TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_SAVE.getKey())
-                : TranslatableLanguage.get().getOrDefault(TranslateKeys.BUTTON_LOAD.getKey())) + save.name;
+                ? "Save"
+                : "Load") + save.name;
         isVisible = !save.tag.isEmpty();
 
         updatePosition();

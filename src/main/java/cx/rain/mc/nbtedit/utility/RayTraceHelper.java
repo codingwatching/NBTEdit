@@ -15,11 +15,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class RayTraceHelper {
     public static void RayTraceBlockOrEntity() {
-        HitResult result = Minecraft.getInstance().hitResult;
+        var result = Minecraft.getInstance().hitResult;
         if (result != null) {
             if (result.getType() == HitResult.Type.ENTITY) {
+                var entity = ((EntityHitResult) result).getEntity();
                 NBTEditNetworking.getInstance().getChannel().sendToServer(
-                        new C2SEntityRequestPacket(((EntityHitResult) result).getEntity().getUUID(), false));
+                        new C2SEntityRequestPacket(entity.getUUID(), entity.getId(), false));
             } else if (result.getType() == HitResult.Type.BLOCK) {
                 NBTEditNetworking.getInstance().getChannel().sendToServer(
                         new C2STileRequestPacket(((BlockHitResult) result).getBlockPos()));

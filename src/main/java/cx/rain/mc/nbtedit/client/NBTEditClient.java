@@ -1,10 +1,7 @@
 package cx.rain.mc.nbtedit.client;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import cx.rain.mc.nbtedit.NBTEdit;
 import cx.rain.mc.nbtedit.gui.screen.NBTEditScreen;
 import net.minecraft.client.Minecraft;
@@ -59,34 +56,36 @@ public class NBTEditClient {
         GlStateManager._disableTexture();
         GlStateManager._depthMask(false);
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
+        var tesselator = Tesselator.getInstance();
+        var buffer = tesselator.getBuilder();
 
         buffer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
         tesselator.end();
         buffer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
         tesselator.end();
         buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
-        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).color(1.0f, 0.0f, 0.0f, 0.5f).endVertex();
         tesselator.end();
 
+        BufferUploader.end(buffer);
+        
         GlStateManager._depthMask(true);
         GlStateManager._enableTexture();
         GlStateManager._disableBlend();
