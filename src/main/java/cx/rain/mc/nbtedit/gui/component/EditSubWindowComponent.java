@@ -43,14 +43,18 @@ public class EditSubWindowComponent extends AbstractWidget {
     protected String valueError;
 
     public EditSubWindowComponent(NBTEditGui parent, NBTNode<NamedNBT> nodeIn,
-                                  boolean canEditNameIn, boolean canEditValueIn,
-                                  int x, int y) {
-        super(x, y, 178, 93, new TextComponent(""));
+                                  boolean canEditNameIn, boolean canEditValueIn) {
+        super(0, 0, 178, 93, new TextComponent("NBTEdit sub-window"));
 
         gui = parent;
         node = nodeIn;
         canEditName = canEditNameIn;
         canEditValue = canEditValueIn;
+    }
+
+    public void init(int xLoc, int yLoc) {
+        x = xLoc;
+        y = yLoc;
 
         colorButton = new SpecialCharacterButton((byte) 0, x + width - 1, y + 34, this::onColorButtonClicked);
         newLineButton = new SpecialCharacterButton((byte) 1, x + width - 1, y + 50, this::onNewLineButtonClicked);
@@ -85,7 +89,6 @@ public class EditSubWindowComponent extends AbstractWidget {
 
         cancelButton = new Button(x + 93, y + 62, 75, 20,
                 new TextComponent("Cancel"), this::onCancelButtonClicked);	// Todo: AS: I18n here.
-
     }
 
     protected void onSaveButtonClicked(Button button) {
@@ -116,7 +119,7 @@ public class EditSubWindowComponent extends AbstractWidget {
             node.get().setName(nameField.getValue());
         }
         setValidValue(node, valueField.getValue());
-        gui.onNodeModified(node);
+        gui.updateNode(node);
         gui.closeSubWindow();
     }
 

@@ -2,7 +2,7 @@ package cx.rain.mc.nbtedit;
 
 import cx.rain.mc.nbtedit.command.NBTEditCommand;
 import cx.rain.mc.nbtedit.config.NBTEditConfigs;
-import cx.rain.mc.nbtedit.utility.nbt.NBTNodeSorter;
+import cx.rain.mc.nbtedit.utility.nbt.NBTSortHelper;
 import cx.rain.mc.nbtedit.utility.nbt.NamedNBT;
 import cx.rain.mc.nbtedit.utility.nbt.ClipboardStates;
 import cx.rain.mc.nbtedit.networking.NBTEditNetworking;
@@ -18,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.apache.logging.log4j.core.appender.rolling.OnStartupTriggeringPolicy;
-import org.apache.logging.log4j.core.appender.rolling.TriggeringPolicy;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.File;
@@ -28,8 +27,6 @@ public class NBTEdit {
 	public static final String MODID = "nbtedit";
 	public static final String NAME = "In-game NBTEdit";
 	public static final String VERSION = "1.17.1-3.0.0";
-
-	public static final NBTNodeSorter SORTER = new NBTNodeSorter();
 
 	public static NamedNBT CLIPBOARD = null;
 

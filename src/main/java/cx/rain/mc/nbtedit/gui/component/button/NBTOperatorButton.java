@@ -2,6 +2,7 @@ package cx.rain.mc.nbtedit.gui.component.button;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import cx.rain.mc.nbtedit.NBTEdit;
+import cx.rain.mc.nbtedit.gui.NBTEditGui;
 import cx.rain.mc.nbtedit.utility.NBTHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -10,17 +11,20 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 
 public class NBTOperatorButton extends Button {
-    public static final ResourceLocation BUTTON_WIDGET_TEXTURE =
+    public static final ResourceLocation BUTTONS_TEXTURE =
             new ResourceLocation(NBTEdit.MODID, "textures/gui/widgets.png");
 
     protected int buttonId;
 
     private long hoverTime;
 
-    public NBTOperatorButton(int id, int x, int y, OnPress onPressed) {
-        super(x, y, 9, 9, new TextComponent(""), onPressed);
+    private NBTEditGui gui;
+
+    public NBTOperatorButton(int id, int x, int y, NBTEditGui nbtedit, OnPress onPressed) {
+        super(x, y, 9, 9, new TextComponent(NBTHelper.getButtonName((byte) id)), onPressed);
 
         buttonId = id;
+        gui = nbtedit;
     }
 
     protected Minecraft getMinecraft() {
@@ -37,7 +41,7 @@ public class NBTOperatorButton extends Button {
 
     @Override
     public void render(PoseStack stack, int mouseX, int mouseY, float partialTick) {
-        getMinecraft().textureManager.bindForSetup(BUTTON_WIDGET_TEXTURE);
+        getMinecraft().textureManager.bindForSetup(BUTTONS_TEXTURE);
 
         if (isMouseInside(mouseX, mouseY)) {    //checks if the mouse is over the button
             Gui.fill(stack, x, y, x + width, y + height, 0x80ffffff);   //draw a grayish background
@@ -58,7 +62,7 @@ public class NBTOperatorButton extends Button {
 
     @Override
     public void renderToolTip(PoseStack stack, int mouseX, int mouseY) {
-        var str = NBTHelper.getButtonName((byte) getButtonId());
+        var str = getMessage();
         var width = getMinecraft().font.width(str);
         fill(stack, mouseX + 4, mouseY + 7, mouseX + 5 + width, mouseY + 17, 0xff000000);
         getMinecraft().font.draw(stack, str, mouseX + 5, mouseY + 8, 0xffffff);

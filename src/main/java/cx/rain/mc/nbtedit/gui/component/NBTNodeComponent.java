@@ -42,7 +42,7 @@ public class NBTNodeComponent extends AbstractWidget {
     }
 
     protected void update() {
-        var display = NBTHelper.getNBTNameSpecial(node.get());
+        text = NBTHelper.getNBTNameSpecial(node.get());
         width = minecraft.font.width(text) + 12;
     }
 

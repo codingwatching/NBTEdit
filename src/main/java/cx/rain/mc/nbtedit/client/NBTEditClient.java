@@ -33,7 +33,6 @@ public class NBTEditClient {
                 var pos = nbtedit.getBlockPos();
                 var level = Minecraft.getInstance().level;
                 var state = level.getBlockState(pos);
-                var block = state.getBlock();
 
                 drawBox(event.getContext(), event.getPartialTicks(), state.getInteractionShape(level, pos).bounds());
             }
@@ -61,31 +60,31 @@ public class NBTEditClient {
         GlStateManager._depthMask(false);
 
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder worldRenderer = tesselator.getBuilder();
+        BufferBuilder buffer = tesselator.getBuilder();
 
-        worldRenderer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-        worldRenderer.vertex(aabb.minX, aabb.minY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.minY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.minY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.minY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.minY, aabb.minZ);
+        buffer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
         tesselator.end();
-        worldRenderer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-        worldRenderer.vertex(aabb.minX, aabb.maxY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.maxY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.maxY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.maxY, aabb.minZ);
+        buffer.begin(VertexFormat.Mode.LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
         tesselator.end();
-        worldRenderer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-        worldRenderer.vertex(aabb.minX, aabb.minY, aabb.minZ);
-        worldRenderer.vertex(aabb.minX, aabb.maxY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.minY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.maxY, aabb.minZ);
-        worldRenderer.vertex(aabb.maxX, aabb.minY, aabb.maxZ);
-        worldRenderer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.minY, aabb.maxZ);
-        worldRenderer.vertex(aabb.minX, aabb.maxY, aabb.maxZ);
+        buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(aabb.minX, aabb.minY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.minZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.minY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.maxX, aabb.maxY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.minY, aabb.maxZ).endVertex();
+        buffer.vertex(aabb.minX, aabb.maxY, aabb.maxZ).endVertex();
         tesselator.end();
 
         GlStateManager._depthMask(true);

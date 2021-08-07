@@ -55,7 +55,7 @@ public class NBTTree {
 	}
 
 	public void sort(NBTNode<NamedNBT> NBTNode) {
-		Collections.sort(NBTNode.getChildren(), NBTEdit.SORTER);
+		Collections.sort(NBTNode.getChildren(), NBTSortHelper.get());
 		for (NBTNode<NamedNBT> c : NBTNode.getChildren()) {
 			sort(c);
 		}

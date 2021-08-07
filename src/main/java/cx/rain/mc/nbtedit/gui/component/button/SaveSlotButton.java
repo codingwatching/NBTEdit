@@ -25,8 +25,8 @@ public class SaveSlotButton extends Button {
 
     private int tickCount = -1;
 
-    public SaveSlotButton(ClipboardStates.Clipboard saveIn, int xRight, int y, OnPress onPressed) {
-        super(0, y, 0, HEIGHT, new TextComponent(""), onPressed);
+    public SaveSlotButton(ClipboardStates.Clipboard saveIn, int xRight, int y, int id, OnPress onPressed) {
+        super(0, y, 0, HEIGHT, new TextComponent("Save #" + id), onPressed);
 
         save = saveIn;
         rightX = xRight;
