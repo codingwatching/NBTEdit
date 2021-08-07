@@ -10,5 +10,5 @@ http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/1286750-
 ## Screenshots（使用截图）: 
 ![使用截图](https://github.com/MeowCraftMC/NBTEdit/raw/master/img/1.png)
 
-## （Bug report）Bug反馈：
+## （Bug report）Bug反馈/催更：
 QQ群：950508038
