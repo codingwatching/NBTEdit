@@ -14,6 +14,6 @@
   "messages.save_failed": "\u4FDD\u5B58\u5931\u8D25\u3002\u65E0\u6548\u7684NBT\uFF01",
   "messages.saved": "\u4FDD\u5B58\u6210\u529F\u3002",
   "messages.unknown_entity_id": "\u65E0\u6548\u7684\u5B9E\u4F53ID\uFF01",
-  "title.nbtedit_entity_gui": "\u6B63\u5728\u7F16\u8F91\u5B9E\u4F53 ID\uFF1A{0}",
-  "title.nbtedit_tile_gui": "\u6B63\u5728\u7F16\u8F91\u4F4D\u4E8E {0} {1} {2} \u7684\u65B9\u5757\u5B9E\u4F53\u3002"
+  "title.nbtedit_entity_gui": "\u6B63\u5728\u7F16\u8F91\u5B9E\u4F53 ID\uFF1A {0}",
+  "title.nbtedit_tile_gui": "\u6B63\u5728\u7F16\u8F91\u4F4D\u4E8E {0} {1} {2} \u7684\u65B9\u5757\u5B9E\u4F53"
 }

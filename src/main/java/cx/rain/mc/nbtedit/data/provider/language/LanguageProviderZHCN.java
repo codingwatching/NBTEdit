@@ -26,8 +26,8 @@ public class LanguageProviderZHCN extends LanguageProviderBase {
         addKey(TranslateKeys.MESSAGE_UNKNOWN_ENTITY_ID, "无效的实体ID！");
         addKey(TranslateKeys.MESSAGE_SAVE_FAILED_ENTITY_NOT_EXISTS, "保存失败。目标实体不存在！");
 
-        addKey(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI, "正在编辑实体 ID：{0}");
-        addKey(TranslateKeys.TITLE_NBTEDIT_TILE_GUI, "正在编辑位于 {0} {1} {2} 的方块实体。");
+        addKey(TranslateKeys.TITLE_NBTEDIT_ENTITY_GUI, "正在编辑实体 ID： {0}");
+        addKey(TranslateKeys.TITLE_NBTEDIT_TILE_GUI, "正在编辑位于 {0} {1} {2} 的方块实体");
 
         addKey(TranslateKeys.BUTTON_SAVE, "保存");
         addKey(TranslateKeys.BUTTON_QUIT, "退出");

@@ -24,14 +24,15 @@ public class NBTEditClient {
             if (nbtedit.isEntity()) {
                 var entity = nbtedit.getEntity();
                 if (entity.isAlive()) {
-                    drawBox(event.getContext(), event.getPartialTicks(), entity.getBoundingBox());
+//                    drawBox(event.getContext(), event.getPartialTicks(), entity.getBoundingBox());
                 }
             } else {
                 var pos = nbtedit.getBlockPos();
                 var level = Minecraft.getInstance().level;
                 var state = level.getBlockState(pos);
 
-                drawBox(event.getContext(), event.getPartialTicks(), state.getInteractionShape(level, pos).bounds());
+                // Fixme: AS: Bounding box is still not working.
+//                drawBox(event.getContext(), event.getPartialTicks(), state.getInteractionShape(level, pos).bounds());
             }
         }
     }
