@@ -8,7 +8,7 @@ A Minecraft mod allows you edit any NBT tags of the game content while in game. 
 http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/1286750-in-game-nbtedit-edit-mob-spawners-attributes-in
 
 ## Screenshots（使用截图）: 
-![使用截图](https://github.com/MeowCraftMC/NBTEdit/raw/main/img/1.png)
+![使用截图](https://github.com/MeowCraftMC/NBTEdit/raw/master/img/1.png)
 
 ## （Bug report）Bug反馈：
 QQ群：950508038
