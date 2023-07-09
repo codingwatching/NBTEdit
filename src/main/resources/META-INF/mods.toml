@@ -1,0 +1,30 @@
+modLoader = "javafml" #mandatory
+loaderVersion = "[36,)" #mandatory
+license = "GPLv3"
+[[mods]] #mandatory
+modId = "nbtedit" #mandatory
+version = "${file.version}" #mandatory
+displayName = "NBTEdit" #mandatory
+#updateJSONURL="http://myurl.me/" #optional
+#displayURL="http://example.com/" #optional
+#logoFile="nbtedit.png" #optional
+credits="DavidGoldman(Davidee) for making the orignal mod." #optional
+authors = "Davidee, Jay113355" #optional
+# The description text for the mod (multi line!) (#mandatory)
+description = '''
+Allows you to edit NBT tags of entities and tiles while in-game.
+'''
+
+[[dependencies.nbtedit]]
+modId = "forge" #mandatory
+mandatory = true #mandatory
+versionRange = "[36,)" #mandatory
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.nbtedit]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16.5,1.17)"
+ordering = "NONE"
+side = "BOTH"

@@ -7,20 +7,22 @@ import com.mcf.davidee.nbtedit.nbt.NBTTree;
 import com.mcf.davidee.nbtedit.nbt.NamedNBT;
 import com.mcf.davidee.nbtedit.nbt.Node;
 import com.mcf.davidee.nbtedit.nbt.SaveStates;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiControls;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.fml.client.gui.GuiUtils;
 import org.apache.logging.log4j.Level;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -31,27 +33,28 @@ import java.util.Map.Entry;
 
 /*
  * The main Gui class for NBTEdit. This implementation is messy, naive, and unoptimized, but it works.
- * This is from long before GuiLib (and is actually my motivation for GuiLib), but sadly I do not 
+ * This is from long before GuiLib (and is actually my motivation for GuiLib), but sadly I do not
  * have time to rewrite it.
- * 
+ *
  * Issues:
  *    - Not extensible - a separate tree GUI class for GuiLib would be nice.
  *    - Naive/unoptimized - layout changes force an entire reload of the tree
- *    - Messy, good luck. Some of the button IDs are hardcoded.
+ *    - Messy, good luck. Some buttons IDs are hardcoded.
  */
-public class GuiNBTTree extends Gui {
+public class GuiNBTTree extends Widget {
 
-	private Minecraft mc = Minecraft.getMinecraft();
+	private final Minecraft minecraft = Minecraft.getInstance();
 
 	private NBTTree tree;
-	private List<GuiNBTNode> nodes;
-	private GuiSaveSlotButton[] saves;
-	private GuiNBTButton[] buttons;
+	private final List<GuiNBTNode> nodes;
+	private final GuiSaveSlotButton[] saves;
+	private final GuiNBTButton[] buttons;
 
 	private final int X_GAP = 10, START_X = 10, START_Y = 30;
-	private final int Y_GAP = Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 2;
+	public final int Y_GAP = Minecraft.getInstance().font.lineHeight + 2;
 
 	private int y, yClick, bottom, width, height, heightDiff, offset;
+	private boolean scrolling = false;
 
 	private Node<NamedNBT> focused;
 	private int focusedSlotIndex;
@@ -63,7 +66,7 @@ public class GuiNBTTree extends Gui {
 	}
 
 	public GuiSaveSlotButton getFocusedSaveSlot() {
-		return (focusedSlotIndex != -1) ? saves[focusedSlotIndex] : null;
+		return ( focusedSlotIndex != -1 ) ? saves[focusedSlotIndex] : null;
 	}
 
 	public NBTTree getNBTTree() {
@@ -71,6 +74,7 @@ public class GuiNBTTree extends Gui {
 	}
 
 	public GuiNBTTree(NBTTree tree) {
+		super(0, 0, 0, 0, StringTextComponent.EMPTY);
 		this.tree = tree;
 		yClick = -1;
 		focusedSlotIndex = -1;
@@ -80,7 +84,7 @@ public class GuiNBTTree extends Gui {
 	}
 
 	private int getHeightDifference() {
-		return getContentHeight() - (bottom - START_Y + 2);
+		return getContentHeight() - ( bottom - START_Y + 2 );
 	}
 
 	private int getContentHeight() {
@@ -97,11 +101,12 @@ public class GuiNBTTree extends Gui {
 		this.bottom = bottom;
 		yClick = -1;
 		initGUI(false);
-		if (window != null)
-			window.initGUI((width - GuiEditNBT.WIDTH) / 2, (height - GuiEditNBT.HEIGHT) / 2);
+		if (window != null) {
+			window.initGUI(( width - GuiEditNBT.WIDTH ) / 2, ( height - GuiEditNBT.HEIGHT ) / 2);
+		}
 	}
 
-	public void updateScreen() {
+	public void tick() {
 		if (window != null)
 			window.update();
 		if (focusedSlotIndex != -1)
@@ -112,29 +117,29 @@ public class GuiNBTTree extends Gui {
 		if (toFocus == null) {
 			for (GuiNBTButton b : buttons)
 				b.setEnabled(false);
-		} else if (toFocus.getObject().getNBT() instanceof NBTTagCompound) {
+		} else if (toFocus.getObject().getNBT() instanceof CompoundNBT) {
 			for (GuiNBTButton b : buttons)
 				b.setEnabled(true);
 			buttons[12].setEnabled(toFocus != tree.getRoot());
-			buttons[11].setEnabled(toFocus.hasParent() && !(toFocus.getParent().getObject().getNBT() instanceof NBTTagList));
+			buttons[11].setEnabled(toFocus.hasParent() && !( toFocus.getParent().getObject().getNBT() instanceof ListNBT ));
 			buttons[13].setEnabled(true);
 			buttons[14].setEnabled(toFocus != tree.getRoot());
 			buttons[15].setEnabled(NBTEdit.clipboard != null);
-		} else if (toFocus.getObject().getNBT() instanceof NBTTagList) {
+		} else if (toFocus.getObject().getNBT() instanceof ListNBT) {
 			if (toFocus.hasChildren()) {
 				byte type = toFocus.getChildren().get(0).getObject().getNBT().getId();
 				for (GuiNBTButton b : buttons)
 					b.setEnabled(false);
 				buttons[type - 1].setEnabled(true);
 				buttons[12].setEnabled(true);
-				buttons[11].setEnabled(!(toFocus.getParent().getObject().getNBT() instanceof NBTTagList));
+				buttons[11].setEnabled(!( toFocus.getParent().getObject().getNBT() instanceof ListNBT ));
 				buttons[13].setEnabled(true);
 				buttons[14].setEnabled(true);
 				buttons[15].setEnabled(NBTEdit.clipboard != null && NBTEdit.clipboard.getNBT().getId() == type);
 			} else
 				for (GuiNBTButton b : buttons)
 					b.setEnabled(true);
-			buttons[11].setEnabled(!(toFocus.getParent().getObject().getNBT() instanceof NBTTagList));
+			buttons[11].setEnabled(!( toFocus.getParent().getObject().getNBT() instanceof ListNBT ));
 			buttons[13].setEnabled(true);
 			buttons[14].setEnabled(true);
 			buttons[15].setEnabled(NBTEdit.clipboard != null);
@@ -237,7 +242,8 @@ public class GuiNBTTree extends Gui {
 				addNodes(child, x);
 	}
 
-	public void draw(int mx, int my) {
+	@Override
+	public void render(MatrixStack matrixStack, int mx, int my, float particleTicks) {
 		int cmx = mx, cmy = my;
 		if (window != null) {
 			cmx = -1;
@@ -245,22 +251,22 @@ public class GuiNBTTree extends Gui {
 		}
 		for (GuiNBTNode node : nodes) {
 			if (node.shouldDraw(START_Y - 1, bottom))
-				node.draw(cmx, cmy);
+				node.render(matrixStack, cmx, cmy, particleTicks);
 		}
 		overlayBackground(0, START_Y - 1, 255, 255);
 		overlayBackground(bottom, height, 255, 255);
 		for (GuiNBTButton but : buttons)
-			but.draw(cmx, cmy);
+			but.render(matrixStack, cmx, cmy, particleTicks);
 		for (GuiSaveSlotButton but : saves)
-			but.draw(cmx, cmy);
-		drawScrollBar(cmx, cmy);
+			but.render(matrixStack, cmx, cmy, particleTicks);
+		drawScrollBar(matrixStack, cmx, cmy);
 		if (window != null)
-			window.draw(mx, my);
+			window.render(matrixStack, mx, my, particleTicks);
 	}
 
-	private void drawScrollBar(int mx, int my) {
-		if (heightDiff > 0) {
-			if (Mouse.isButtonDown(0)) {
+	private void drawScrollBar(MatrixStack matrixStack, int mx, int my) {
+		if (this.scrollBarActive()) {
+			/*if (Minecraft.getInstance().mouseHandler.isLeftPressed()) {
 				if (yClick == -1) {
 					if (mx >= width - 20 && mx < width && my >= START_Y - 1 && my < bottom) {
 						yClick = my;
@@ -272,31 +278,31 @@ public class GuiNBTTree extends Gui {
 					if (height < 1) {
 						height = 1;
 					}
-					int length = (bottom - (START_Y - 1)) * (bottom - (START_Y - 1)) / getContentHeight();
+					int length = ( bottom - ( START_Y - 1 ) ) * ( bottom - ( START_Y - 1 ) ) / getContentHeight();
 					if (length < 32)
 						length = 32;
-					if (length > bottom - (START_Y - 1) - 8)
-						length = bottom - (START_Y - 1) - 8;
+					if (length > bottom - ( START_Y - 1 ) - 8)
+						length = bottom - ( START_Y - 1 ) - 8;
 
-					scrollMultiplier /= (float) (this.bottom - (START_Y - 1) - length) / (float) height;
+					scrollMultiplier /= (float) ( this.bottom - ( START_Y - 1 ) - length ) / (float) height;
 
 
-					shift((int) ((yClick - my) * scrollMultiplier));
+					shift((int) ( ( yClick - my ) * scrollMultiplier ));
 					yClick = my;
 				}
 			} else
-				yClick = -1;
+				yClick = -1;*/
 
 
-			drawRect(width - 20, START_Y - 1, width, bottom, Integer.MIN_VALUE);
+			fill(matrixStack, width - 20, START_Y - 1, width, bottom, Integer.MIN_VALUE);
 
 
-			int length = (bottom - (START_Y - 1)) * (bottom - (START_Y - 1)) / getContentHeight();
+			int length = ( bottom - ( START_Y - 1 ) ) * ( bottom - ( START_Y - 1 ) ) / getContentHeight();
 			if (length < 32)
 				length = 32;
-			if (length > bottom - (START_Y - 1) - 8)
-				length = bottom - (START_Y - 1) - 8;
-			int y = -offset * (this.bottom - (START_Y - 1) - length) / heightDiff + (START_Y - 1);
+			if (length > bottom - ( START_Y - 1 ) - 8)
+				length = bottom - ( START_Y - 1 ) - 8;
+			int y = -offset * ( this.bottom - ( START_Y - 1 ) - length ) / heightDiff + ( START_Y - 1 );
 
 			if (y < START_Y - 1)
 				y = START_Y - 1;
@@ -304,28 +310,40 @@ public class GuiNBTTree extends Gui {
 
 			//	this.drawGradientRect(width-20,y,width,y+length,8421504, 12632256);
 			//drawRect(width-20,y,width,y+length,0x80ffffff);
-			drawGradientRect(width - 20, y, width, y + length, 0x80ffffff, 0x80333333);
+			GuiUtils.drawGradientRect(matrixStack.last().pose(), 0, width - 20, y, width, y + length, 0x80ffffff, 0x80333333);
 		}
 	}
 
 	protected void overlayBackground(int par1, int par2, int par3, int par4) {
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder worldRenderer = tessellator.getBuffer();
-		mc.renderEngine.bindTexture(OPTIONS_BACKGROUND);
+		BufferBuilder worldRenderer = tessellator.getBuilder();
+		minecraft.getTextureManager().bind(BACKGROUND_LOCATION);
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		float var6 = 32.0F;
-		worldRenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
+		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
 		Color color = new Color(4210752);
-		worldRenderer.color(color.getRed(), color.getGreen(), color.getBlue(), par4);
-		worldRenderer.pos(0.0D, (double) par2, 0.0D).tex(0.0D, (double) ((float) par2 / var6));
-		worldRenderer.pos((double) this.width, (double) par2, 0.0D).tex((double) ((float) this.width / var6), (double) ((float) par2 / var6));
-		worldRenderer.color(color.getRed(), color.getGreen(), color.getBlue(), par3);
-		worldRenderer.pos((double) this.width, (double) par1, 0.0D).tex((double) ((float) this.width / var6), (double) ((float) par1 / var6));
-		worldRenderer.pos(0.0D, (double) par1, 0.0D).tex(0.0D, (double) ((float) par1 / var6));
-		tessellator.draw();
+		worldRenderer.vertex(0.0D, par2, 0.0D)
+				.color(color.getRed(), color.getGreen(), color.getBlue(), par4)
+				.uv(0.0F, ( (float) par2 / var6 ))
+				.endVertex();
+		worldRenderer.vertex(this.width, par2, 0.0D)
+				.color(color.getRed(), color.getGreen(), color.getBlue(), par4)
+				.uv(( (float) this.width / var6 ), ( (float) par2 / var6 ))
+				.endVertex();
+		worldRenderer.vertex(this.width, par1, 0.0D)
+				.color(color.getRed(), color.getGreen(), color.getBlue(), par3)
+				.uv(( (float) this.width / var6 ), ( (float) par1 / var6 ))
+				.endVertex();
+		worldRenderer.vertex(0.0D, par1, 0.0D)
+				.color(color.getRed(), color.getGreen(), color.getBlue(), par3)
+				.uv(0.0F, ( (float) par1 / var6 ))
+				.endVertex();
+		tessellator.end();
 	}
 
-	public void mouseClicked(int mx, int my) {
+	@Override
+	public boolean mouseClicked(double mx, double my, int button) {
+		this.scrolling(false);
 		if (window == null) {
 			boolean reInit = false;
 
@@ -333,27 +351,27 @@ public class GuiNBTTree extends Gui {
 				if (node.hideShowClicked(mx, my)) { // Check hide/show children buttons
 					reInit = true;
 					if (node.shouldDrawChildren())
-						offset = (START_Y + 1) - (node.y) + offset;
+						offset = ( START_Y + 1 ) - ( node.y ) + offset;
 					break;
 				}
 			}
 			if (!reInit) {
-				for (GuiNBTButton button : buttons) { //Check top buttons
-					if (button.inBounds(mx, my)) {
-						buttonClicked(button);
-						return;
+				for (GuiNBTButton guiNBTButton : buttons) { //Check top buttons
+					if (guiNBTButton.inBounds(mx, my)) {
+						buttonClicked(guiNBTButton);
+						return true;
 					}
 				}
-				for (GuiSaveSlotButton button : saves) {
-					if (button.inBoundsOfX(mx, my)) {
-						button.reset();
+				for (GuiSaveSlotButton saveSlotButton : saves) {
+					if (saveSlotButton.inBoundsOfX(mx, my)) {
+						saveSlotButton.reset();
 						NBTEdit.getSaveStates().save();
-						mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-						return;
+						minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+						return true;
 					}
-					if (button.inBounds(mx, my)) {
-						saveButtonClicked(button);
-						return;
+					if (saveSlotButton.inBounds(mx, my)) {
+						saveButtonClicked(saveSlotButton);
+						return true;
 					}
 				}
 				if (my >= START_Y && mx <= width - 175) { //Check actual nodes, remove focus if nothing clicked
@@ -364,52 +382,81 @@ public class GuiNBTTree extends Gui {
 							break;
 						}
 					}
-					if (focusedSlotIndex != -1)
+					if (focusedSlotIndex != -1) {
 						stopEditingSlot();
+					}
 					setFocused(newFocus);
 				}
-			} else
+				if (scrollBarActive() && mx >= width - 20 && mx < width && my >= START_Y - 1 && my < bottom) {
+					this.scrolling(true);
+					/*if (yClick == -1) {
+						yClick = (int) my;
+					} else {
+						float scrollMultiplier = 1.0F;
+						int height = getHeightDifference();
+
+						if (height < 1) {
+							height = 1;
+						}
+						int length = ( bottom - ( START_Y - 1 ) ) * ( bottom - ( START_Y - 1 ) ) / getContentHeight();
+						if (length < 32)
+							length = 32;
+						if (length > bottom - ( START_Y - 1 ) - 8)
+							length = bottom - ( START_Y - 1 ) - 8;
+
+						scrollMultiplier /= (float) ( this.bottom - ( START_Y - 1 ) - length ) / (float) height;
+
+
+						shift((int) ( ( yClick - my ) * scrollMultiplier ));
+						yClick = (int) my;
+					}*/
+				}
+
+			} else {
 				initGUI();
-		} else
-			window.click(mx, my);
+			}
+		} else {
+			window.mouseClicked(mx, my, button);
+		}
+		return true;
 	}
 
 	private void saveButtonClicked(GuiSaveSlotButton button) {
-		if (button.save.tag.hasNoTags()) { //Copy into save slot
-			Node<NamedNBT> obj = (focused == null) ? tree.getRoot() : focused;
-			NBTBase base = obj.getObject().getNBT();
+		if (button.save.tag.isEmpty()) { //Copy into save slot
+			Node<NamedNBT> obj = ( focused == null ) ? tree.getRoot() : focused;
+			INBT base = obj.getObject().getNBT();
 			String name = obj.getObject().getName();
-			if (base instanceof NBTTagList) {
-				NBTTagList list = new NBTTagList();
+			if (base instanceof ListNBT) {
+				ListNBT list = new ListNBT();
 				tree.addChildrenToList(obj, list);
-				button.save.tag.setTag(name, list);
-			} else if (base instanceof NBTTagCompound) {
-				NBTTagCompound compound = new NBTTagCompound();
+				button.save.tag.put(name, list);
+			} else if (base instanceof CompoundNBT) {
+				CompoundNBT compound = new CompoundNBT();
 				tree.addChildrenToTag(obj, compound);
-				button.save.tag.setTag(name, compound);
+				button.save.tag.put(name, compound);
 			} else
-				button.save.tag.setTag(name, base.copy());
+				button.save.tag.put(name, base.copy());
 			button.saved();
 			NBTEdit.getSaveStates().save();
-			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+			minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 		} else { //Paste into
-			Map<String, NBTBase> nbtMap = NBTHelper.getMap(button.save.tag);
+			Map<String, INBT> nbtMap = NBTHelper.getMap(button.save.tag);
 			if (nbtMap.isEmpty()) {
 				NBTEdit.log(Level.WARN, "Unable to copy from save \"" + button.save.name + "\".");
-				NBTEdit.log(Level.WARN, "The save is invalid - a valid save must only contain 1 core NBTBase");
+				NBTEdit.log(Level.WARN, "The save is invalid - a valid save must only contain 1 core INBT");
 			} else {
 				if (focused == null)
 					setFocused(tree.getRoot());
 
-				Entry<String, NBTBase> firstEntry = nbtMap.entrySet().iterator().next();
+				Entry<String, INBT> firstEntry = nbtMap.entrySet().iterator().next();
 				assert firstEntry != null;
 				String name = firstEntry.getKey();
-				NBTBase nbt = firstEntry.getValue().copy();
-				if (focused == tree.getRoot() && nbt instanceof NBTTagCompound && name.equals("ROOT")) {
+				INBT nbt = firstEntry.getValue().copy();
+				if (focused == tree.getRoot() && nbt instanceof CompoundNBT && name.equals("ROOT")) {
 					setFocused(null);
-					tree = new NBTTree((NBTTagCompound) nbt);
+					tree = new NBTTree((CompoundNBT) nbt);
 					initGUI();
-					mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+					minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 				} else if (canAddToParent(focused.getObject().getNBT(), nbt)) {
 					focused.setDrawChildren(true);
 					for (Iterator<Node<NamedNBT>> it = focused.getChildren().iterator(); it.hasNext(); ) { //Replace object with same name
@@ -423,7 +470,7 @@ public class GuiNBTTree extends Gui {
 					tree.sort(node);
 					setFocused(node);
 					initGUI(true);
-					mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+					minecraft.getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 				}
 			}
 		}
@@ -445,8 +492,8 @@ public class GuiNBTTree extends Gui {
 			List<Node<NamedNBT>> children = focused.getChildren();
 			String type = NBTStringHelper.getButtonName(button.getId());
 
-			if (focused.getObject().getNBT() instanceof NBTTagList) {
-				NBTBase nbt = NBTStringHelper.newTag(button.getId());
+			if (focused.getObject().getNBT() instanceof ListNBT) {
+				INBT nbt = NBTStringHelper.newTag(button.getId());
 				if (nbt != null) {
 					Node<NamedNBT> newNode = new Node<>(focused, new NamedNBT("", nbt));
 					children.add(newNode);
@@ -496,7 +543,7 @@ public class GuiNBTTree extends Gui {
 	}
 
 	private Node<NamedNBT> insert(String name, byte type) {
-		NBTBase nbt = NBTStringHelper.newTag(type);
+		INBT nbt = NBTStringHelper.newTag(type);
 		if (nbt != null)
 			return insert(new NamedNBT(name, nbt));
 		return null;
@@ -517,13 +564,13 @@ public class GuiNBTTree extends Gui {
 
 	public void editSelected() {
 		if (focused != null) {
-			NBTBase base = focused.getObject().getNBT();
-			if (focused.hasChildren() && (base instanceof NBTTagCompound || base instanceof NBTTagList)) {
+			INBT base = focused.getObject().getNBT();
+			if (focused.hasChildren() && ( base instanceof CompoundNBT || base instanceof ListNBT )) {
 				focused.setDrawChildren(!focused.shouldDrawChildren());
 				int index;
 
-				if (focused.shouldDrawChildren() && (index = indexOf(focused)) != -1)
-					offset = (START_Y + 1) - nodes.get(index).y + offset;
+				if (focused.shouldDrawChildren() && ( index = indexOf(focused) ) != -1)
+					offset = ( START_Y + 1 ) - nodes.get(index).y + offset;
 
 				initGUI();
 			} else if (buttons[11].isEnabled()) {
@@ -534,12 +581,12 @@ public class GuiNBTTree extends Gui {
 		}
 	}
 
-	private boolean canAddToParent(NBTBase parent, NBTBase child) {
-		if (parent instanceof NBTTagCompound)
+	private boolean canAddToParent(INBT parent, INBT child) {
+		if (parent instanceof CompoundNBT)
 			return true;
-		if (parent instanceof NBTTagList) {
-			NBTTagList list = (NBTTagList) parent;
-			return list.tagCount() == 0 || list.getTagType() == child.getId();
+		if (parent instanceof ListNBT) {
+			ListNBT list = (ListNBT) parent;
+			return list.size() == 0 || list.getId() == child.getId();
 		}
 		return false;
 	}
@@ -553,7 +600,7 @@ public class GuiNBTTree extends Gui {
 			focused.setDrawChildren(true);
 
 			NamedNBT namedNBT = NBTEdit.clipboard.copy();
-			if (focused.getObject().getNBT() instanceof NBTTagList) {
+			if (focused.getObject().getNBT() instanceof ListNBT) {
 				namedNBT.setName("");
 				Node<NamedNBT> node = new Node<>(focused, namedNBT);
 				focused.addChild(node);
@@ -585,12 +632,12 @@ public class GuiNBTTree extends Gui {
 	private void copy() {
 		if (focused != null) {
 			NamedNBT namedNBT = focused.getObject();
-			if (namedNBT.getNBT() instanceof NBTTagList) {
-				NBTTagList list = new NBTTagList();
+			if (namedNBT.getNBT() instanceof ListNBT) {
+				ListNBT list = new ListNBT();
 				tree.addChildrenToList(focused, list);
 				NBTEdit.clipboard = new NamedNBT(namedNBT.getName(), list);
-			} else if (namedNBT.getNBT() instanceof NBTTagCompound) {
-				NBTTagCompound compound = new NBTTagCompound();
+			} else if (namedNBT.getNBT() instanceof CompoundNBT) {
+				CompoundNBT compound = new CompoundNBT();
 				tree.addChildrenToTag(focused, compound);
 				NBTEdit.clipboard = new NamedNBT(namedNBT.getName(), compound);
 			} else
@@ -605,10 +652,10 @@ public class GuiNBTTree extends Gui {
 	}
 
 	private void edit() {
-		NBTBase base = focused.getObject().getNBT();
-		NBTBase parent = focused.getParent().getObject().getNBT();
-		window = new GuiEditNBT(this, focused, !(parent instanceof NBTTagList), !(base instanceof NBTTagCompound || base instanceof NBTTagList));
-		window.initGUI((width - GuiEditNBT.WIDTH) / 2, (height - GuiEditNBT.HEIGHT) / 2);
+		INBT base = focused.getObject().getNBT();
+		INBT parent = focused.getParent().getObject().getNBT();
+		window = new GuiEditNBT(this, focused, !( parent instanceof ListNBT ), !( base instanceof CompoundNBT || base instanceof ListNBT ));
+		window.initGUI(( width - GuiEditNBT.WIDTH ) / 2, ( height - GuiEditNBT.HEIGHT ) / 2);
 	}
 
 	public void nodeEdited(Node<NamedNBT> node) {
@@ -619,9 +666,12 @@ public class GuiNBTTree extends Gui {
 
 	public void arrowKeyPressed(boolean up) {
 		if (focused == null)
-			shift((up) ? Y_GAP : -Y_GAP);
+			shift(( up ) ? Y_GAP : -Y_GAP);
 		else
 			shiftFocus(up);
+	}
+	public void backspacePressed() {
+
 	}
 
 	private int indexOf(Node<NamedNBT> node) {
@@ -636,10 +686,10 @@ public class GuiNBTTree extends Gui {
 	private void shiftFocus(boolean up) {
 		int index = indexOf(focused);
 		if (index != -1) {
-			index += (up) ? -1 : 1;
+			index += ( up ) ? -1 : 1;
 			if (index >= 0 && index < nodes.size()) {
 				setFocused(nodes.get(index).getNode());
-				shift((up) ? Y_GAP : -Y_GAP);
+				shift(( up ) ? Y_GAP : -Y_GAP);
 			}
 		}
 	}
@@ -648,7 +698,7 @@ public class GuiNBTTree extends Gui {
 		int index = indexOf(node);
 		if (index != -1) {
 			GuiNBTNode gui = nodes.get(index);
-			shift((bottom + START_Y + 1) / 2 - (gui.y + gui.height));
+			shift(( bottom + START_Y + 1 ) / 2 - ( gui.y + gui.getHeight() ));
 		}
 	}
 
@@ -665,6 +715,18 @@ public class GuiNBTTree extends Gui {
 		offset = dif;
 	}
 
+	public boolean scrollBarActive() {
+		return heightDiff > 0;
+	}
+
+	public boolean scrolling() {
+		return scrolling;
+	}
+
+	public void scrolling(boolean bool) {
+		this.scrolling = bool;
+	}
+
 	public void closeWindow() {
 		window = null;
 	}
@@ -679,20 +741,47 @@ public class GuiNBTTree extends Gui {
 		focusedSlotIndex = -1;
 	}
 
-	public void keyTyped(char ch, int key) {
-		if (focusedSlotIndex != -1) {
-			saves[focusedSlotIndex].keyTyped(ch, key);
-		} else {
-			if (key == Keyboard.KEY_C && GuiControls.isCtrlKeyDown())
-				copy();
-			if (key == Keyboard.KEY_V && GuiControls.isCtrlKeyDown() && canPaste())
-				paste();
-			if (key == Keyboard.KEY_X && GuiControls.isCtrlKeyDown())
-				cut();
+	@Override
+	public boolean keyPressed(int key, int p_231046_2_, int p_231046_3_) {
+		if (focusedSlotIndex != -1 && key == GLFW.GLFW_KEY_BACKSPACE) {
+			saves[focusedSlotIndex].backSpace();
+			return true;
 		}
+		if (key == GLFW.GLFW_KEY_DELETE) {
+			this.deleteSelected();
+		} else if (key == GLFW.GLFW_KEY_ENTER) {
+			this.editSelected();
+		} else if (key == GLFW.GLFW_KEY_UP) {
+			this.arrowKeyPressed(true);
+		} else if (key == GLFW.GLFW_KEY_DOWN) {
+			this.arrowKeyPressed(false);
+		}
+		return super.keyPressed(key, p_231046_2_, p_231046_3_);
 	}
 
-	public void rightClick(int mx, int my) {
+	@Override
+	public boolean charTyped(char ch, int key) {
+		if (focusedSlotIndex != -1) {
+			saves[focusedSlotIndex].keyTyped(ch, key);
+			return true;
+		} else {
+			if (key == 67 && Screen.hasControlDown()) {
+				copy();
+				return true;
+			}
+			if (key == 86 && Screen.hasControlDown() && canPaste()) {
+				paste();
+				return true;
+			}
+			if (key == 88 && Screen.hasControlDown()) {
+				cut();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void rightClick(double mx, double my) {
 		for (int i = 0; i < 7; ++i) {
 			if (saves[i].inBounds(mx, my)) {
 				setFocused(null);
@@ -709,14 +798,4 @@ public class GuiNBTTree extends Gui {
 			}
 		}
 	}
-
-	private void putColor(BufferBuilder renderer, int argb, int p_178988_2_) {
-		int i = renderer.getColorIndex(p_178988_2_);
-		int j = argb >> 16 & 255;
-		int k = argb >> 8 & 255;
-		int l = argb & 255;
-		int i1 = argb >> 24 & 255;
-		renderer.putColorRGBA(i, j, k, l, i1);
-	}
-
 }

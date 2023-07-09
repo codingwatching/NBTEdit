@@ -1,19 +1,19 @@
 package com.mcf.davidee.nbtedit.packets;
 
 import com.mcf.davidee.nbtedit.NBTEdit;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 import org.apache.logging.log4j.Level;
 
-public class TileRequestPacket implements IMessage {
+import java.util.function.Supplier;
+
+public class TileRequestPacket {
 	/**
 	 * The position of the tileEntity requested.
 	 */
-	private BlockPos pos;
+	protected BlockPos pos;
 
 	/**
 	 * Required default constructor.
@@ -25,26 +25,21 @@ public class TileRequestPacket implements IMessage {
 		this.pos = pos;
 	}
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		this.pos = BlockPos.fromLong(buf.readLong());
+	public static TileRequestPacket fromBytes(PacketBuffer buf) {
+		return new TileRequestPacket(BlockPos.of(buf.readLong()));
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeLong(this.pos.toLong());
+	public void toBytes(PacketBuffer buf) {
+		buf.writeLong(this.pos.asLong());
 	}
 
-	public static class Handler implements IMessageHandler<TileRequestPacket, IMessage> {
+	public void handle(Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().setPacketHandled(true);
+		ServerPlayerEntity player = ctx.get().getSender();
 
-		@Override
-		public IMessage onMessage(TileRequestPacket packet, MessageContext ctx) {
-			EntityPlayerMP player = ctx.getServerHandler().player;
-			NBTEdit.log(Level.TRACE, player.getName() + " requested tileEntity at "
-					+ packet.pos.getX() + ", " + packet.pos.getY() + ", " + packet.pos.getZ());
-			NBTEdit.NETWORK.sendTile(player, packet.pos);
-			return null;
-		}
+		ctx.get().enqueueWork(() -> NBTEdit.NETWORK.sendTile(player, pos));
+		NBTEdit.log(Level.TRACE, player.getGameProfile().getName() + " requested tileEntity at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
+
 	}
 
 }

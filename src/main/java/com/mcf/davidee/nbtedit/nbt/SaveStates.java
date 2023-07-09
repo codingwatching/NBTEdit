@@ -1,8 +1,8 @@
 package com.mcf.davidee.nbtedit.nbt;
 
 import com.mcf.davidee.nbtedit.NBTEdit;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
@@ -19,27 +19,27 @@ public class SaveStates {
 		this.file = file;
 		tags = new SaveState[7];
 		for (int i = 0; i < 7; ++i)
-			tags[i] = new SaveState("Slot " + (i + 1));
+			tags[i] = new SaveState("Slot " + ( i + 1 ));
 	}
 
 	public void read() throws IOException {
 		if (file.exists() && file.canRead()) {
-			NBTTagCompound root = CompressedStreamTools.read(file);
+			CompoundNBT root = CompressedStreamTools.read(file);
 			for (int i = 0; i < 7; ++i) {
-				String name = "slot" + (i + 1);
-				if (root.hasKey(name))
-					tags[i].tag = root.getCompoundTag(name);
-				if (root.hasKey(name + "Name"))
+				String name = "slot" + ( i + 1 );
+				if (root.contains(name))
+					tags[i].tag = root.getCompound(name);
+				if (root.contains(name + "Name"))
 					tags[i].name = root.getString(name + "Name");
 			}
 		}
 	}
 
 	public void write() throws IOException {
-		NBTTagCompound root = new NBTTagCompound();
+		CompoundNBT root = new CompoundNBT();
 		for (int i = 0; i < 7; ++i) {
-			root.setTag("slot" + (i + 1), tags[i].tag);
-			root.setString("slot" + (i + 1) + "Name", tags[i].name);
+			root.put("slot" + ( i + 1 ), tags[i].tag);
+			root.putString("slot" + ( i + 1 ) + "Name", tags[i].name);
 		}
 		CompressedStreamTools.write(root, file);
 	}
@@ -70,11 +70,11 @@ public class SaveStates {
 
 	public static final class SaveState {
 		public String name;
-		public NBTTagCompound tag;
+		public CompoundNBT tag;
 
 		public SaveState(String name) {
 			this.name = name;
-			this.tag = new NBTTagCompound();
+			this.tag = new CompoundNBT();
 		}
 	}
 }

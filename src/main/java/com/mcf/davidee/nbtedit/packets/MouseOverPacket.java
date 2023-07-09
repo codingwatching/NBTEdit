@@ -1,15 +1,17 @@
 package com.mcf.davidee.nbtedit.packets;
 
 import com.mcf.davidee.nbtedit.NBTEdit;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
-public class MouseOverPacket implements IMessage {
+import java.util.function.Supplier;
+
+public class MouseOverPacket {
 
 	/**
 	 * Required default constructor.
@@ -17,29 +19,27 @@ public class MouseOverPacket implements IMessage {
 	public MouseOverPacket() {
 	}
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
+	public static MouseOverPacket fromBytes(PacketBuffer buf) {
+		return new MouseOverPacket();
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
+	public void toBytes(PacketBuffer buf) {
+		//Nothing to write.
 	}
 
-	public static class Handler implements IMessageHandler<MouseOverPacket, IMessage> {
-
-		@Override
-		public IMessage onMessage(MouseOverPacket message, MessageContext ctx) {
-			RayTraceResult pos = Minecraft.getMinecraft().objectMouseOver;
-			if (pos != null) {
-				if (pos.entityHit != null) {
-					return new EntityRequestPacket(pos.entityHit.getEntityId());
-				} else if (pos.typeOfHit == RayTraceResult.Type.BLOCK) {
-					return new TileRequestPacket(pos.getBlockPos());
-				} else {
-					NBTEdit.proxy.sendMessage(null, "Error - No tile or entity selected", TextFormatting.RED);
-				}
+	public void handle(Supplier<NetworkEvent.Context> ctx) {
+		ctx.get().setPacketHandled(true);
+		RayTraceResult ray = Minecraft.getInstance().hitResult;
+		if (ray != null) {
+			if (ray.getType() == RayTraceResult.Type.ENTITY) {
+				EntityRayTraceResult entityRay = (EntityRayTraceResult) ray;
+				NBTEdit.NETWORK.INSTANCE.reply(new EntityRequestPacket(entityRay.getEntity().getId()), ctx.get());
+			} else if (ray.getType() == RayTraceResult.Type.BLOCK) {
+				BlockRayTraceResult blockRay = (BlockRayTraceResult) ray;
+				NBTEdit.NETWORK.INSTANCE.reply(new TileRequestPacket(blockRay.getBlockPos()), ctx.get());
+			} else {
+				NBTEdit.proxy.sendMessage(null, "Error - No tile or entity selected", TextFormatting.RED);
 			}
-			return null;
 		}
 	}
 }

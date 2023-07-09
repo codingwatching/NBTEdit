@@ -1,29 +1,21 @@
 package com.mcf.davidee.nbtedit;
 
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagByte;
-import net.minecraft.nbt.NBTTagByteArray;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagDouble;
-import net.minecraft.nbt.NBTTagEnd;
-import net.minecraft.nbt.NBTTagFloat;
-import net.minecraft.nbt.NBTTagInt;
-import net.minecraft.nbt.NBTTagIntArray;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagLong;
-import net.minecraft.nbt.NBTTagShort;
-import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.*;
 
 import com.google.common.base.Strings;
 import com.mcf.davidee.nbtedit.nbt.NamedNBT;
+import net.minecraftforge.common.util.Constants;
 
+/**
+ * TODO ENUM THE NBT STUFF. -Jay
+ */
 public class NBTStringHelper {
 
 	public static final char SECTION_SIGN = '\u00A7';
 
 	public static String getNBTName(NamedNBT namedNBT) {
 		String name = namedNBT.getName();
-		NBTBase obj = namedNBT.getNBT();
+		INBT obj = namedNBT.getNBT();
 
 		String s = toString(obj);
 		return Strings.isNullOrEmpty(name) ? "" + s : name + ": " + s;
@@ -31,66 +23,64 @@ public class NBTStringHelper {
 
 	public static String getNBTNameSpecial(NamedNBT namedNBT) {
 		String name = namedNBT.getName();
-		NBTBase obj = namedNBT.getNBT();
+		INBT obj = namedNBT.getNBT();
 
 		String s = toString(obj);
 		return Strings.isNullOrEmpty(name) ? "" + s : name + ": " + s + SECTION_SIGN + 'r';
 	}
 
-	public static NBTBase newTag(byte type) {
+	public static INBT newTag(byte type) {
 		switch (type) {
-			case 0:
-				return new NBTTagEnd();
-			case 1:
-				return new NBTTagByte((byte) 0);
-			case 2:
-				return new NBTTagShort();
-			case 3:
-				return new NBTTagInt(0);
-			case 4:
-				return new NBTTagLong(0);
-			case 5:
-				return new NBTTagFloat(0);
-			case 6:
-				return new NBTTagDouble(0);
-			case 7:
-				return new NBTTagByteArray(new byte[0]);
-			case 8:
-				return new NBTTagString("");
-			case 9:
-				return new NBTTagList();
-			case 10:
-				return new NBTTagCompound();
-			case 11:
-				return new NBTTagIntArray(new int[0]);
+			case Constants.NBT.TAG_END:
+				return EndNBT.INSTANCE;
+			case Constants.NBT.TAG_BYTE:
+				return ByteNBT.ZERO;
+			case Constants.NBT.TAG_SHORT:
+				return ShortNBT.valueOf((short) 0);
+			case Constants.NBT.TAG_INT:
+				return IntNBT.valueOf(0);
+			case Constants.NBT.TAG_LONG:
+				return LongNBT.valueOf(0);
+			case Constants.NBT.TAG_FLOAT:
+				return FloatNBT.valueOf(0.0f);
+			case Constants.NBT.TAG_DOUBLE:
+				return DoubleNBT.valueOf(0.0d);
+			case Constants.NBT.TAG_BYTE_ARRAY:
+				return new ByteArrayNBT(new byte[0]);
+			case Constants.NBT.TAG_STRING:
+				return StringNBT.valueOf("");
+			case Constants.NBT.TAG_LIST:
+				return new ListNBT();
+			case Constants.NBT.TAG_COMPOUND:
+				return new CompoundNBT();
+			case Constants.NBT.TAG_INT_ARRAY:
+				return new IntArrayNBT(new int[0]);
+			case Constants.NBT.TAG_LONG_ARRAY:
+				return new LongArrayNBT(new long[0]);
 			default:
 				return null;
 		}
 	}
 
-	public static String toString(NBTBase base) {
+	public static String toString(INBT base) {
 		switch (base.getId()) {
-			case 1:
-				return "" + ((NBTTagByte) base).getByte();
-			case 2:
-				return "" + ((NBTTagShort) base).getShort();
-			case 3:
-				return "" + ((NBTTagInt) base).getInt();
-			case 4:
-				return "" + ((NBTTagLong) base).getLong();
-			case 5:
-				return "" + ((NBTTagFloat) base).getFloat();
-			case 6:
-				return "" + ((NBTTagDouble) base).getDouble();
-			case 7:
+			case Constants.NBT.TAG_BYTE:
+			case Constants.NBT.TAG_SHORT:
+			case Constants.NBT.TAG_INT:
+			case Constants.NBT.TAG_LONG:
+			case Constants.NBT.TAG_FLOAT:
+			case Constants.NBT.TAG_DOUBLE:
+				return ((NumberNBT) base).getAsNumber().toString();
+			case Constants.NBT.TAG_BYTE_ARRAY:
 				return base.toString();
-			case 8:
-				return ((NBTTagString) base).getString();
-			case 9:
+			case Constants.NBT.TAG_STRING:
+				return base.getAsString();
+			case Constants.NBT.TAG_LIST:
 				return "(TagList)";
-			case 10:
+			case Constants.NBT.TAG_COMPOUND:
 				return "(TagCompound)";
-			case 11:
+			case Constants.NBT.TAG_INT_ARRAY:
+			case Constants.NBT.TAG_LONG_ARRAY:
 				return base.toString();
 			default:
 				return "?";
@@ -99,28 +89,30 @@ public class NBTStringHelper {
 
 	public static String getButtonName(byte id) {
 		switch (id) {
-			case 1:
+			case Constants.NBT.TAG_BYTE:
 				return "Byte";
-			case 2:
+			case Constants.NBT.TAG_SHORT:
 				return "Short";
-			case 3:
+			case Constants.NBT.TAG_INT:
 				return "Int";
-			case 4:
+			case Constants.NBT.TAG_LONG:
 				return "Long";
-			case 5:
+			case Constants.NBT.TAG_FLOAT:
 				return "Float";
-			case 6:
+			case Constants.NBT.TAG_DOUBLE:
 				return "Double";
-			case 7:
+			case Constants.NBT.TAG_BYTE_ARRAY:
 				return "Byte[]";
-			case 8:
+			case Constants.NBT.TAG_STRING:
 				return "String";
-			case 9:
+			case Constants.NBT.TAG_LIST:
 				return "List";
-			case 10:
+			case Constants.NBT.TAG_COMPOUND:
 				return "Compound";
-			case 11:
-				return "Int[]";
+			case Constants.NBT.TAG_INT_ARRAY:
+				return "Int[]";/*
+			case Constants.NBT.TAG_LONG_ARRAY:
+				return "Int[]";*/
 			case 12:
 				return "Edit";
 			case 13:

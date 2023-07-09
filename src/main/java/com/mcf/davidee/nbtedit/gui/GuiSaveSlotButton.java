@@ -1,21 +1,25 @@
 package com.mcf.davidee.nbtedit.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
-import org.lwjgl.input.Keyboard;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.fml.client.gui.GuiUtils;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import com.mcf.davidee.nbtedit.nbt.SaveStates;
 
-public class GuiSaveSlotButton extends Gui {
+public class GuiSaveSlotButton extends Widget {
 
 	public static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/widgets.png");
 	private static final int X_SIZE = 14, HEIGHT = 20, MAX_WIDTH = 150, MIN_WIDTH = 82, GAP = 3;
-	private final Minecraft mc;
+	private final Minecraft minecraft;
 	public final SaveStates.SaveState save;
 	private final int rightX;
 
@@ -27,45 +31,46 @@ public class GuiSaveSlotButton extends Gui {
 	private int tickCount;
 
 	public GuiSaveSlotButton(SaveStates.SaveState save, int rightX, int y) {
+		super(rightX, y, MIN_WIDTH, HEIGHT, StringTextComponent.EMPTY);
 		this.save = save;
 		this.rightX = rightX;
 		this.y = y;
-		mc = Minecraft.getMinecraft();
-		xVisible = !save.tag.hasNoTags();
-		text = (save.tag.hasNoTags() ? "Save " : "Load ") + save.name;
+		minecraft = Minecraft.getInstance();
+		xVisible = !save.tag.isEmpty();
+		text = (save.tag.isEmpty() ? "Save " : "Load ") + save.name;
 		tickCount = -1;
 		updatePosition();
 	}
 
 
-	public void draw(int mx, int my) {
-
+	@Override
+	public void render(MatrixStack matrixStack, int mx, int my, float particleTicks) {
 		int textColor = ((inBounds(mx, my))) ? 16777120 : 0xffffff;
-		renderVanillaButton(x, y, 0, 66, width, HEIGHT);
-		drawCenteredString(mc.fontRenderer, text, x + width / 2, y + 6, textColor);
+		renderVanillaButton(matrixStack, x, y, 0, 66, width, HEIGHT);
+		drawCenteredString(matrixStack, minecraft.font, text, x + width / 2, y + 6, textColor);
 		if (tickCount != -1 && tickCount / 6 % 2 == 0) {
-			mc.fontRenderer.drawStringWithShadow("_", x + (width + mc.fontRenderer.getStringWidth(text)) / 2 + 1, y + 6, 0xffffff);
+			minecraft.font.drawShadow(matrixStack, "_", x + (width + minecraft.font.width(text)) / 2 + 1, y + 6, 0xffffff);
 		}
 
 		if (xVisible) {
 			textColor = ((inBoundsOfX(mx, my))) ? 16777120 : 0xffffff;
-			renderVanillaButton(leftBoundOfX(), topBoundOfX(), 0, 66, X_SIZE, X_SIZE);
-			drawCenteredString(mc.fontRenderer, "x", x - GAP - X_SIZE / 2, y + 6, textColor);
+			renderVanillaButton(matrixStack, leftBoundOfX(), topBoundOfX(), 0, 66, X_SIZE, X_SIZE);
+			drawCenteredString(matrixStack, minecraft.font, "x", x - GAP - X_SIZE / 2, y + 6, textColor);
 		}
 	}
 
-	private void renderVanillaButton(int x, int y, int u, int v, int width, int height) {
+	private void renderVanillaButton(MatrixStack matrixStack, int x, int y, int u, int v, int width, int height) {
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		mc.renderEngine.bindTexture(TEXTURE);
+		minecraft.getTextureManager().bind(TEXTURE);
 
 		//Top Left
-		this.drawTexturedModalRect(x, y, u, v, width / 2, height / 2);
+		GuiUtils.drawTexturedModalRect(matrixStack, x, y, u, v, width / 2, height / 2, 0);
 		//Top Right 
-		this.drawTexturedModalRect(x + width / 2, y, u + 200 - width / 2, v, width / 2, height / 2);
+		GuiUtils.drawTexturedModalRect(matrixStack, x + width / 2, y, u + 200 - width / 2, v, width / 2, height / 2, 0);
 		//Bottom Left
-		this.drawTexturedModalRect(x, y + height / 2, u, v + 20 - height / 2, width / 2, height / 2);
+		GuiUtils.drawTexturedModalRect(matrixStack, x, y + height / 2, u, v + 20 - height / 2, width / 2, height / 2, 0);
 		//Bottom Right
-		this.drawTexturedModalRect(x + width / 2, y + height / 2, u + 200 - width / 2, v + 20 - height / 2, width / 2, height / 2);
+		GuiUtils.drawTexturedModalRect(matrixStack, x + width / 2, y + height / 2, u + 200 - width / 2, v + 20 - height / 2, width / 2, height / 2, 0);
 	}
 
 	private int leftBoundOfX() {
@@ -76,7 +81,7 @@ public class GuiSaveSlotButton extends Gui {
 		return y + (HEIGHT - X_SIZE) / 2;
 	}
 
-	public boolean inBoundsOfX(int mx, int my) {
+	public boolean inBoundsOfX(double mx, double my) {
 		int buttonX = leftBoundOfX();
 		int buttonY = topBoundOfX();
 		return xVisible && mx >= buttonX && my >= buttonY && mx < buttonX + X_SIZE && my < buttonY + X_SIZE;
@@ -86,8 +91,12 @@ public class GuiSaveSlotButton extends Gui {
 		return mx >= x && my >= y && mx < x + width && my < y + HEIGHT;
 	}
 
+	public boolean inBounds(double mx, double my) {
+		return mx >= x && my >= y && mx < x + width && my < y + HEIGHT;
+	}
+
 	private void updatePosition() {
-		width = mc.fontRenderer.getStringWidth(text) + 24;
+		width = minecraft.font.width(text) + 24;
 		if (width % 2 == 1)
 			++width;
 		width = MathHelper.clamp(width, MIN_WIDTH, MAX_WIDTH);
@@ -96,7 +105,7 @@ public class GuiSaveSlotButton extends Gui {
 
 	public void reset() {
 		xVisible = false;
-		save.tag = new NBTTagCompound();
+		save.tag = new CompoundNBT();
 		text = "Save " + save.name;
 		updatePosition();
 	}
@@ -108,14 +117,13 @@ public class GuiSaveSlotButton extends Gui {
 		updatePosition();
 	}
 
-
 	public void keyTyped(char c, int key) {
-		if (key == Keyboard.KEY_BACK) {
+		if (key == GLFW.GLFW_KEY_BACKSPACE) {
 			backSpace();
 		}
-		if (Character.isDigit(c) || Character.isLetter(c)) {
+		if (SharedConstants.isAllowedChatCharacter(c)) {
 			save.name += c;
-			text = (save.tag.hasNoTags() ? "Save " : "Load ") + save.name;
+			text = (save.tag.isEmpty() ? "Save " : "Load ") + save.name;
 			updatePosition();
 		}
 	}
@@ -124,7 +132,7 @@ public class GuiSaveSlotButton extends Gui {
 	public void backSpace() {
 		if (save.name.length() > 0) {
 			save.name = save.name.substring(0, save.name.length() - 1);
-			text = (save.tag.hasNoTags() ? "Save " : "Load ") + save.name;
+			text = (save.tag.isEmpty() ? "Save " : "Load ") + save.name;
 			updatePosition();
 		}
 	}

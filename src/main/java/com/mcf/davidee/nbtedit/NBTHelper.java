@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.nbt.*;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -15,24 +15,24 @@ import java.util.Map;
 
 public class NBTHelper {
 
-	public static NBTTagCompound nbtRead(DataInputStream in) throws IOException {
+	public static CompoundNBT nbtRead(DataInputStream in) throws IOException {
 		return CompressedStreamTools.read(in);
 	}
 
-	public static void nbtWrite(NBTTagCompound compound, DataOutput out) throws IOException {
+	public static void nbtWrite(CompoundNBT compound, DataOutput out) throws IOException {
 		CompressedStreamTools.write(compound, out);
 	}
 
-	public static Map<String, NBTBase> getMap(NBTTagCompound tag) {
-		return ReflectionHelper.getPrivateValue(NBTTagCompound.class, tag, 2);
+	public static Map<String, INBT> getMap(CompoundNBT tag) {
+		return ObfuscationReflectionHelper.getPrivateValue(CompoundNBT.class, tag, "field_74784_a");
 	}
 
-	public static NBTBase getTagAt(NBTTagList tag, int index) {
-		List<NBTBase> list = ReflectionHelper.getPrivateValue(NBTTagList.class, tag, 1);
+	public static INBT getTagAt(ListNBT tag, int index) {
+		List<INBT> list = ObfuscationReflectionHelper.getPrivateValue(ListNBT.class, tag, "field_74747_a");
 		return list.get(index);
 	}
 
-	public static void writeToBuffer(NBTTagCompound nbt, ByteBuf buf) {
+	public static void writeToBuffer(CompoundNBT nbt, ByteBuf buf) {
 		if (nbt == null) {
 			buf.writeByte(0);
 		} else {
@@ -44,7 +44,7 @@ public class NBTHelper {
 		}
 	}
 
-	public static NBTTagCompound readNbtFromBuffer(ByteBuf buf) {
+	public static CompoundNBT readNbtFromBuffer(ByteBuf buf) {
 		int index = buf.readerIndex();
 		byte isNull = buf.readByte();
 
