@@ -71,7 +71,7 @@ public class GuiEditNBTTree extends Screen {
 		if (window != null) {
 			return window.keyPressed(key, p_231046_2_, p_231046_3_);
 		} else {
-			if (key == GLFW.GLFW_MOUSE_BUTTON_2) {
+			if (key == GLFW.GLFW_KEY_ESCAPE) {
 				if (guiTree.isEditingSlot()) {
 					guiTree.stopEditingSlot();
 				} else {
